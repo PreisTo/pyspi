@@ -9,7 +9,7 @@ def find_data_files(directory):
 
     paths = []
 
-    for (path, directories, filenames) in os.walk(directory):
+    for path, directories, filenames in os.walk(directory):
 
         for filename in filenames:
 

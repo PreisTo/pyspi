@@ -29,6 +29,7 @@ def test_active_dets_and_response_version():
 
 def test_plotting():
     from pyspi.io.plotting.spi_display import SPI
+
     time_string = "151212 205010"
     s = SPI(time=time_string)
     fig = s.plot_spi_working_dets()

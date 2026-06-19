@@ -16,7 +16,7 @@ class SPIDRM(InstrumentResponse):
         self._drm_generator = drm_generator
 
         self._drm_generator.set_location(ra, dec)
-        self._min_dist = np.deg2rad(.5)
+        self._min_dist = np.deg2rad(0.5)
 
         self._ra = ra
         self._dec = dec
@@ -53,8 +53,9 @@ class SPIDRM(InstrumentResponse):
 
         :returns:
         """
-        self._ra, self._dec =\
-            self._drm_generator.set_location_direct_sat_coord(azimuth, zenith)
+        self._ra, self._dec = self._drm_generator.set_location_direct_sat_coord(
+            azimuth, zenith
+        )
 
         self._matrix = self._drm_generator.matrix
         self._matrix_transpose = self._matrix.T
@@ -76,7 +77,8 @@ class SPIDRM(InstrumentResponse):
         #                   sc_matrix=self._drm_generator._sc_matrix,
         #                   det=self._drm_generator._det,
         #                   fixed_rsp_matrix=self._drm_generator._rsp_matrix)
-        return SPIDRM(drm_generator=new_drm_generator,
-                      ra=self._ra,
-                      dec=self._dec,
-                      )
+        return SPIDRM(
+            drm_generator=new_drm_generator,
+            ra=self._ra,
+            dec=self._dec,
+        )

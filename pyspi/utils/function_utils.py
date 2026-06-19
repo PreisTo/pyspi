@@ -17,8 +17,7 @@ def get_time_object(time):
     :returns: time object
     """
     if not isinstance(time, Time):
-        time = datetime.strptime(time,
-                                 '%y%m%d %H%M%S')
+        time = datetime.strptime(time, "%y%m%d %H%M%S")
         time = Time(time)
     return time
 
@@ -35,24 +34,19 @@ def leapseconds(time_object):
 
     time_object = get_time_object(time_object)
 
-    if time_object < Time(datetime.strptime('060101 000000',
-                                            '%y%m%d %H%M%S')):
+    if time_object < Time(datetime.strptime("060101 000000", "%y%m%d %H%M%S")):
         lsec = 0
-    elif time_object < Time(datetime.strptime('090101 000000',
-                                              '%y%m%d %H%M%S')):
+    elif time_object < Time(datetime.strptime("090101 000000", "%y%m%d %H%M%S")):
         lsec = 1
-    elif time_object < Time(datetime.strptime('120701 000000',
-                                              '%y%m%d %H%M%S')):
+    elif time_object < Time(datetime.strptime("120701 000000", "%y%m%d %H%M%S")):
         lsec = 2
-    elif time_object < Time(datetime.strptime('150701 000000',
-                                              '%y%m%d %H%M%S')):
+    elif time_object < Time(datetime.strptime("150701 000000", "%y%m%d %H%M%S")):
         lsec = 3
-    elif time_object < Time(datetime.strptime('170101 000000',
-                                              '%y%m%d %H%M%S')):
+    elif time_object < Time(datetime.strptime("170101 000000", "%y%m%d %H%M%S")):
         lsec = 4
     else:
         lsec = 5
-    return TimeDelta(lsec, format='sec')
+    return TimeDelta(lsec, format="sec")
 
 
 def find_response_version(time):
@@ -66,17 +60,18 @@ def find_response_version(time):
 
     time = get_time_object(time)
 
-    if time < Time(datetime.strptime('031206 060000', '%y%m%d %H%M%S')):
+    if time < Time(datetime.strptime("031206 060000", "%y%m%d %H%M%S")):
         version = 0
-    elif time < Time(datetime.strptime('040717 082006', '%y%m%d %H%M%S')):
+    elif time < Time(datetime.strptime("040717 082006", "%y%m%d %H%M%S")):
         version = 1
-    elif time < Time(datetime.strptime('090219 095957', '%y%m%d %H%M%S')):
+    elif time < Time(datetime.strptime("090219 095957", "%y%m%d %H%M%S")):
         version = 2
-    elif time < Time(datetime.strptime('100527 124500', '%y%m%d %H%M%S')):
+    elif time < Time(datetime.strptime("100527 124500", "%y%m%d %H%M%S")):
         version = 3
     else:
         version = 4
     return version
+
 
 def find_needed_ids(time):
     """
@@ -89,26 +84,25 @@ def find_needed_ids(time):
 
     # Path to file, which contains id information and start and stop
     # time
-    id_file_path = os.path.join(get_path_of_internal_data_dir(),
-                                'id_data_time.hdf5')
+    id_file_path = os.path.join(get_path_of_internal_data_dir(), "id_data_time.hdf5")
 
     # Get GRB time in ISDC_MJD
-    time_of_GRB_ISDC_MJD = (time).tt.mjd-51544
+    time_of_GRB_ISDC_MJD = (time).tt.mjd - 51544
     # Get which id contain the needed time. When the wanted time is
     # too close to the boundarie also add the pervious or following
     # observation id
-    id_file = h5py.File(id_file_path, 'r')
-    start_id = id_file['Start'][()]
-    stop_id = id_file['Stop'][()]
-    ids = id_file['ID'][()]
+    id_file = h5py.File(id_file_path, "r")
+    start_id = id_file["Start"][()]
+    stop_id = id_file["Stop"][()]
+    ids = id_file["ID"][()]
 
     mask_larger = start_id < time_of_GRB_ISDC_MJD
     mask_smaller = stop_id > time_of_GRB_ISDC_MJD
 
     try:
-        id_number = list(mask_smaller*mask_larger).index(True)
+        id_number = list(mask_smaller * mask_larger).index(True)
     except:
-        raise Exception('No pointing id contains this time...')
+        raise Exception("No pointing id contains this time...")
 
     return ids[id_number].decode("utf-8")
 
@@ -122,7 +116,7 @@ def ISDC_MJD(time_object):
     :returns: Time in Integral MJD time
     """
     time_object = get_time_object(time_object)
-    return time_object.tt.mjd-51544
+    return time_object.tt.mjd - 51544
 
 
 def ISDC_MJD_to_cxcsec(ISDC_MJD_time):
@@ -134,4 +128,4 @@ def ISDC_MJD_to_cxcsec(ISDC_MJD_time):
     :returns: time in cxcsec format (seconds since 1998-01-01 00:00:00)
     """
 
-    return Time(ISDC_MJD_time+51544, format='mjd', scale='utc').cxcsec
+    return Time(ISDC_MJD_time + 51544, format="mjd", scale="utc").cxcsec
