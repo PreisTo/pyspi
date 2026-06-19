@@ -2,11 +2,13 @@
 
 
 def test_spipointing():
-    from pyspi.utils.response.spi_pointing import SPIPointing
-    from pyspi.io.package_data import get_path_of_external_data_dir
-    from pyspi.io.get_files import get_files
     import os
+
     import numpy as np
+
+    from pyspi.io.get_files import get_files
+    from pyspi.io.package_data import get_path_of_external_data_dir
+    from pyspi.utils.response.spi_pointing import SPIPointing
 
     pointing_id = 169600130010
     get_files(pointing_id)

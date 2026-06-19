@@ -1,9 +1,10 @@
 # Test download from isdarc for given pointin_id
-import pytest
-import urllib.request
-from urllib.error import URLError
 import os
+import urllib.request
 from tempfile import NamedTemporaryFile
+from urllib.error import URLError
+
+import pytest
 
 try:
     urllib.request.urlopen(
@@ -34,11 +35,12 @@ except:
 
 @pytest.mark.skipif(skip_test, reason="ISDC data arciv is broken")
 def test_download():
-    from pyspi.io.get_files import get_files
-    from pyspi.io.package_data import get_path_of_external_data_dir
-    from pyspi.io.file_utils import file_existing_and_readable
     import os
     import shutil
+
+    from pyspi.io.file_utils import file_existing_and_readable
+    from pyspi.io.get_files import get_files
+    from pyspi.io.package_data import get_path_of_external_data_dir
 
     pointing_id = 169600130010
     base_path = os.path.join(

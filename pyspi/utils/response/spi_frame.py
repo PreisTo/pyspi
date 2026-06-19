@@ -1,17 +1,17 @@
 import astropy.coordinates as coord
 import astropy.units as u
 import numpy as np
-from numba import njit
 from astropy.coordinates import (
-    BaseCoordinateFrame,
     Attribute,
+    BaseCoordinateFrame,
     RepresentationMapping,
     frame_transform_graph,
     spherical_to_cartesian,
 )
+from numba import njit
 
-from pyspi.utils.response.spi_pointing import construct_sc_matrix
 from pyspi.utils.geometry import cart2polar, polar2cart
+from pyspi.utils.response.spi_pointing import construct_sc_matrix
 
 
 class SPIFrame(BaseCoordinateFrame):

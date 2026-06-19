@@ -1,13 +1,14 @@
 import os
-from shutil import copyfile
-from pyspi.io.package_data import get_path_of_external_data_dir
-from astropy.utils.data import download_file
-import requests
 import shutil
 import urllib
+from shutil import copyfile
 from urllib.error import URLError
 
+import requests
+from astropy.utils.data import download_file
+
 from pyspi.io.file_utils import file_existing_and_readable
+from pyspi.io.package_data import get_path_of_external_data_dir
 
 
 def create_file_structure(pointing_id):

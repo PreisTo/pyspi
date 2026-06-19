@@ -1,10 +1,11 @@
-import numpy as np
-import astropy.io.fits as fits
-from numba import njit
 import os
 
-from pyspi.utils.geometry import cart2polar, polar2cart
+import astropy.io.fits as fits
+import numpy as np
+from numba import njit
+
 from pyspi.io.package_data import get_path_of_internal_data_dir
+from pyspi.utils.geometry import cart2polar, polar2cart
 
 
 @njit

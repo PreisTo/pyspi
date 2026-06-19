@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib.patches import RegularPolygon
+
 from pyspi.utils.livedets import get_live_dets
 
 NUM_REAL_DETS = 19

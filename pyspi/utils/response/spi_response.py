@@ -1,25 +1,26 @@
+import copy
 import os
 from datetime import datetime
+
 import numpy as np
 import scipy.interpolate as interpolate
 from astropy.time.core import Time
+from interpolation import interp
 from IPython.display import HTML
 from numba import njit
-from interpolation import interp
-import copy
 
 from pyspi.io.get_files import get_files
 from pyspi.io.package_data import (
-    get_path_of_internal_data_dir,
     get_path_of_external_data_dir,
+    get_path_of_internal_data_dir,
 )
-from pyspi.utils.response.spi_pointing import SPIPointing
+from pyspi.utils.function_utils import find_needed_ids
 from pyspi.utils.response.spi_frame import transform_icrs_to_spi, transform_spi_to_icrs
+from pyspi.utils.response.spi_pointing import SPIPointing
 from pyspi.utils.response.spi_response_data import (
     ResponseDataPhotopeak,
     ResponseDataRMF,
 )
-from pyspi.utils.function_utils import find_needed_ids
 
 
 @njit

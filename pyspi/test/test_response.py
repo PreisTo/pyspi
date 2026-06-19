@@ -3,10 +3,11 @@ import numpy as np
 
 def test_response():
     from astropy.time import Time
+
     from pyspi.utils.function_utils import find_response_version
-    from pyspi.utils.response.spi_response_data import ResponseDataRMF
-    from pyspi.utils.response.spi_response import ResponseRMFGenerator
     from pyspi.utils.response.spi_drm import SPIDRM
+    from pyspi.utils.response.spi_response import ResponseRMFGenerator
+    from pyspi.utils.response.spi_response_data import ResponseDataRMF
 
     grbtime = Time("2012-07-11T02:44:53", format="isot", scale="utc")
     ein = np.geomspace(20, 8000, 300)

@@ -1,14 +1,16 @@
-import numpy as np
-import h5py
-from scipy.interpolate import interp1d
-from pyspi.utils.livedets import get_live_dets_pointing
-from pyspi.io.package_data import get_path_of_internal_data_dir
+import os
 
 # from scipy.special import erfc
 from math import erfc
+
+import h5py
+import numpy as np
+from numba import float64, njit
 from scipy.integrate import quad
-from numba import njit, float64
-import os
+from scipy.interpolate import interp1d
+
+from pyspi.io.package_data import get_path_of_internal_data_dir
+from pyspi.utils.livedets import get_live_dets_pointing
 
 
 @njit

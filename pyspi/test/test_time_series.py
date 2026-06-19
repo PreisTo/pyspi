@@ -2,9 +2,10 @@ import pytest
 
 
 def test_time_series_without_response():
-    from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
     import numpy as np
     from astropy.time import Time
+
+    from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
 
     ebounds = np.geomspace(20, 400, 30)
     grbtime = Time("2012-07-11T02:44:53", format="isot", scale="utc")
@@ -21,13 +22,14 @@ def test_time_series_without_response():
 
 
 def test_time_series_with_response():
-    from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
     import numpy as np
     from astropy.time import Time
+
+    from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
     from pyspi.utils.function_utils import find_response_version
-    from pyspi.utils.response.spi_response_data import ResponseDataRMF
-    from pyspi.utils.response.spi_response import ResponseRMFGenerator
     from pyspi.utils.response.spi_drm import SPIDRM
+    from pyspi.utils.response.spi_response import ResponseRMFGenerator
+    from pyspi.utils.response.spi_response_data import ResponseDataRMF
 
     ebounds = np.geomspace(20, 400, 30)
     ein = np.geomspace(20, 800, 300)

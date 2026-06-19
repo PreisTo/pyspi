@@ -1,8 +1,9 @@
-import numpy as np
-import h5py
-from dataclasses import dataclass
 import os
+from dataclasses import dataclass
+
 import astropy.io.fits as fits
+import h5py
+import numpy as np
 
 from pyspi.io.package_data import get_path_of_internal_data_dir
 

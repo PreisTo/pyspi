@@ -1,16 +1,14 @@
 import collections
-from typing import Optional, Dict, Union
+from typing import Dict, Optional, Union
+
 import numpy as np
-
-from astromodels import Parameter, Model
+from astromodels import Model, Parameter
 from astromodels.functions.priors import Cosine_Prior, Uniform_prior
-
 from threeML import PluginPrototype
 from threeML.io.file_utils import sanitize_filename
+from threeML.io.logging import setup_logger
 from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
 from threeML.plugins.SpectrumLike import SpectrumLike
-from threeML.io.logging import setup_logger
-
 
 from pyspi.utils.response.spi_drm import SPIDRM
 

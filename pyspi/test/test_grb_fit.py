@@ -1,21 +1,21 @@
 def test_grb_fit():
-    from pyspi.SPILike import SPILikeGRB
-    from threeML import DataList
-    from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
-    from pyspi.utils.response.spi_response import ResponseRMFGenerator
-    from pyspi.utils.response.spi_drm import SPIDRM
-    from astropy.time import Time
-    from astromodels import (
-        Powerlaw,
-        Log_uniform_prior,
-        Uniform_prior,
-        PointSource,
-        Model,
-    )
     import numpy as np
+    from astromodels import (
+        Log_uniform_prior,
+        Model,
+        PointSource,
+        Powerlaw,
+        Uniform_prior,
+    )
+    from astropy.time import Time
+    from threeML import BayesianAnalysis, DataList
+
+    from pyspi.SPILike import SPILikeGRB
+    from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
     from pyspi.utils.function_utils import find_response_version
+    from pyspi.utils.response.spi_drm import SPIDRM
+    from pyspi.utils.response.spi_response import ResponseRMFGenerator
     from pyspi.utils.response.spi_response_data import ResponseDataRMF
-    from threeML import BayesianAnalysis
 
     ein = np.geomspace(20, 800, 300)
     ebounds = np.geomspace(20, 400, 30)

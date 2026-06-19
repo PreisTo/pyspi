@@ -1,8 +1,9 @@
+import os
+from datetime import datetime
+
+import h5py
 import numpy as np
 from astropy.time.core import Time, TimeDelta
-from datetime import datetime
-import h5py
-import os
 
 from pyspi.io.package_data import get_path_of_internal_data_dir
 

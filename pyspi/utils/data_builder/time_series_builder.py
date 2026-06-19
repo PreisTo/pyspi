@@ -1,30 +1,29 @@
-from astropy.time.core import Time, TimeDelta
-import yaml
-import os
-import numpy as np
-from datetime import datetime
-import h5py
-from astropy.io import fits
 import copy
+import os
+from datetime import datetime
 
-from pyspi.io.get_files import get_files
-from pyspi.io.package_data import get_path_of_external_data_dir
-from pyspi.utils.livedets import double_names, triple_names, get_live_dets
-from pyspi.utils.function_utils import (
-    find_needed_ids,
-    ISDC_MJD_to_cxcsec,
-    get_time_object,
-)
-
-
+import h5py
+import numpy as np
+import yaml
+from astropy.io import fits
+from astropy.time.core import Time, TimeDelta
 from threeML.io.file_utils import sanitize_filename
+from threeML.utils.data_builders.time_series_builder import TimeSeriesBuilder
+from threeML.utils.spectrum.binned_spectrum import BinnedSpectrumWithDispersion
+from threeML.utils.time_series.binned_spectrum_series import BinnedSpectrumSeries
 from threeML.utils.time_series.event_list import (
     EventListWithDeadTime,
     EventListWithLiveTime,
 )
-from threeML.utils.time_series.binned_spectrum_series import BinnedSpectrumSeries
-from threeML.utils.spectrum.binned_spectrum import BinnedSpectrumWithDispersion
-from threeML.utils.data_builders.time_series_builder import TimeSeriesBuilder
+
+from pyspi.io.get_files import get_files
+from pyspi.io.package_data import get_path_of_external_data_dir
+from pyspi.utils.function_utils import (
+    ISDC_MJD_to_cxcsec,
+    find_needed_ids,
+    get_time_object,
+)
+from pyspi.utils.livedets import double_names, get_live_dets, triple_names
 
 
 class SPISWFile(object):
