@@ -29,11 +29,12 @@ try:
     os.system(f"rsync -ltv {file_path} {save_path}")
     tempfile.close()
     skip_test = False
-except:
+except Exception as e:
+    print("Also failed rsync from isdc - will skip test for good " + str(e))
     pass
 
 
-@pytest.mark.skipif(skip_test, reason="ISDC data arciv is broken")
+@pytest.mark.skipif(skip_test, reason="ISDC data archiev is broken")
 def test_download():
     import os
     import shutil
