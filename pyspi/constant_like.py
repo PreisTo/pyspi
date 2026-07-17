@@ -3,9 +3,10 @@ from typing import Optional
 import numpy as np
 from astromodels.core.model import Model
 from astromodels.functions.priors import Cosine_Prior, Uniform_prior
-from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
+from threeML.plug,ins.DispersionSpectrumLike import DispersionSpectrumLike
 
 from pyspi.utils.response.spi_drm import SPIDRM
+from pyspi.utils.query import SearchQuery, IntegralQuery
 import logging
 
 log = logging.getLogger(__name__)
@@ -175,3 +176,10 @@ class SPIConstantLike(DispersionSpectrumLike):
             free_position,
             spectrum_like._verbose,
         )
+
+    @classmethod
+    def from_query_search(cls, object_position, radius, **kwargs):
+        # TODO: catch if only name is provided
+        query = SearchQuery(position = object_position,radius = radius,**kwargs)
+
+        pass
