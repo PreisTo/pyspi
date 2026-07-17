@@ -1,0 +1,86 @@
+[build-system]
+    requires = ["setuptools","versioneer[toml]","numpy"]
+    build-backend = "setuptools.build_meta"
+
+[project]
+    name = "py-spi"
+    description = "A python analysis framework for INTEGRAL-SPI"
+    readme = "README.md"
+    license = "GPL-3.0-or-later"
+    license-files = ["LICENSE"]
+    dynamic = ["version"]
+
+    authors = [
+	    {name = "Bjoern Biltzinger",email = "bbiltzing@mpe.mpg.de"}
+    ]
+
+
+    requires-python = ">=3.11.0"
+    dependencies = [
+	    "numpy",
+	    "numba",
+	    "matplotlib",
+	    "h5py",
+	    "pandas",
+	    "ipython",
+	    "astropy",
+	    "extension-helpers",
+	    "scipy",
+	    "configya",
+	    "astromodels",
+	    "threeml",
+	    "interpolation",
+    ]
+    classifiers =[
+	    "Development Status :: 5 - Production/Stable",
+	    "Environment :: Console",
+	    "Intended Audience :: Science/Research",
+	    "Operating System :: POSIX",
+	    "Programming Language :: Python :: 3.11",
+	    "Programming Language :: Python :: 3.12",
+	    "Programming Language :: Python :: 3.13",
+	    "Topic :: Scientific/Engineering :: Physics",
+    ]
+
+[project.optional-dependencies]
+    tests = ["pytest","pytest-cov","hypothesis"]
+    docs = [
+	"sphinx>=1.4",
+	"sphinx_rtd_theme",
+	"nbsphinx",
+	"sphinx-autoapi",
+	"rtds_action"
+    ]
+
+[project.urls]
+    Documentation = "https://pyspi.readthedocs.io"
+    Homepage = "https://github.com/BjoernBiltzinger/pyspi"
+    Issues = "https://github.com/BjoernBiltzinger/pyspi/issues"
+
+[tool.setuptools]
+    include-package-data = true
+
+[tool.setuptools.packages.find]
+    exclude = ["output"]
+
+[tool.setuptools.package-data]
+    pyspi= [
+	"data/*/*",
+    ]
+
+[tool.versioneer]
+	VCS = "git"
+	style = "pep440"
+	versionfile_source = "pyspi/_version.py"
+	versionfile_build = "pyspi/_version.py"
+	tag_prefix = "v"
+	parentdir_prefix = "pyspi-"
+
+
+[tool.pytest.ini_options]
+	addopts = "--color=yes --cov=pyspi --cov-report=term -ra --ignore=pyspi/test --ignore=pyspi/_version.py"
+	log_cli = "1"
+	log_cli_level = "INFO"
+	testpaths = "pyspi/test"
+	norecursedirs = "pyspi/test"
+
