@@ -4,8 +4,9 @@ import urllib
 from shutil import copyfile
 from urllib.error import URLError
 
-import requests
 from astropy.utils.data import download_file
+
+from astroquery.esa.integral import IntegralClass
 
 from pyspi.io.file_utils import file_existing_and_readable
 from pyspi.io.package_data import get_path_of_external_data_dir
@@ -18,20 +19,11 @@ def create_file_structure(pointing_id):
     :return:
     """
     # Check if file structure exists. If not, create it.
-    if not os.path.exists(get_path_of_external_data_dir()):
-        os.mkdir(get_path_of_external_data_dir())
 
-    if not os.path.exists(
-        os.path.join(get_path_of_external_data_dir(), "pointing_data")
-    ):
-        os.mkdir(os.path.join(get_path_of_external_data_dir(), "pointing_data"))
-
-    if not os.path.exists(
-        os.path.join(get_path_of_external_data_dir(), "pointing_data", pointing_id)
-    ):
-        os.mkdir(
-            os.path.join(get_path_of_external_data_dir(), "pointing_data", pointing_id)
-        )
+    os.makedirs(
+        os.path.join(get_path_of_external_data_dir(), "pointing_data", pointing_id),
+        exist_ok=True,
+    )
 
 
 def get_and_save_file(extension, pointing_id, access="isdc"):
@@ -45,7 +37,8 @@ def get_and_save_file(extension, pointing_id, access="isdc"):
     assert access in [
         "isdc",
         "afs",
-    ], f"Access variable must be 'isdc' or 'afs' but is {access}."
+        "isla",
+    ], f"Access variable must be 'isdc', 'afs' or 'isla' but is {access}."
 
     save_path = os.path.join(
         get_path_of_external_data_dir(), "pointing_data", pointing_id, extension
@@ -113,6 +106,12 @@ def get_and_save_file(extension, pointing_id, access="isdc"):
                 )
 
 
+def get_and_save_isla(pointing_id):
+
+    isla = IntegralClass()
+    isla.download_science_windows(science_windows=[pointing_id], output_file="temp")
+
+
 def get_files(pointing_id, access="isdc"):
     """
     Function to get the needed files for a certain pointing_id and save
@@ -127,20 +126,23 @@ def get_files(pointing_id, access="isdc"):
     assert access in [
         "isdc",
         "afs",
-    ], f"Access variable must be 'isdc' or 'afs' but is {access}."
+        "isla",
+    ], f"Access variable must be 'isdc', 'afs' or 'isla' but is {access}."
 
     create_file_structure(pointing_id)
-
-    # Get the data files we need
-    get_and_save_file(
-        extension="sc_orbit_param.fits.gz", pointing_id=pointing_id, access=access
-    )
-    get_and_save_file(
-        extension="spi_oper.fits.gz", pointing_id=pointing_id, access=access
-    )
-    get_and_save_file(
-        extension="spi_science_hk.fits.gz", pointing_id=pointing_id, access=access
-    )
-    get_and_save_file(
-        extension="spi_gti.fits.gz", pointing_id=pointing_id, access=access
-    )
+    if not access == "heasarc":
+        # Get the data files we need
+        get_and_save_file(
+            extension="sc_orbit_param.fits.gz", pointing_id=pointing_id, access=access
+        )
+        get_and_save_file(
+            extension="spi_oper.fits.gz", pointing_id=pointing_id, access=access
+        )
+        get_and_save_file(
+            extension="spi_science_hk.fits.gz", pointing_id=pointing_id, access=access
+        )
+        get_and_save_file(
+            extension="spi_gti.fits.gz", pointing_id=pointing_id, access=access
+        )
+    else:
+        get_and_save_isla(pointing_id)
