@@ -1,9 +1,21 @@
 import numpy as np
 from numba import njit
+import logging
+
+log = logging.getLogger(__name__)
 
 
 @njit
 def b_maxL_2(m, t, C):
+    """
+    Calculate the maximum likelihood estimate of the background parameter b for two
+    pointings.
+
+    :param m: Array of model predictions for each pointing
+    :param t: Array of elapsed times for each pointing
+    :param C: Array of observed counts for each pointing
+    :return: Maximum likelihood estimate of b
+    """
     first = C[0] + C[1] - (m[0] + m[1]) * (t[0] + t[1])
     root = (C[0] + C[1] + (m[0] - m[1]) * (t[0] + t[1])) ** 2 - 4 * C[0] * (
         m[0] - m[1]
@@ -14,6 +26,16 @@ def b_maxL_2(m, t, C):
 
 @njit
 def b_maxL_3(m, t, C):
+    """
+    Calculate the maximum likelihood estimate of the background parameter b for three
+    pointings.
+
+    :param m: Array of model predictions for each pointing
+    :param t: Array of elapsed times for each pointing
+    :param C: Array of observed counts for each pointing
+    :return: Maximum likelihood estimate of b
+    """
+
     mt = m[0] + m[1] + m[2]
     tt = t[0] + t[1] + t[2]
     Ct = C[0] + C[1] + C[2]
@@ -50,6 +72,16 @@ def b_maxL_3(m, t, C):
 
 @njit
 def b_maxL_4(m, t, C):
+    """
+    Calculate the maximum likelihood estimate of the background parameter b for four
+    pointings.
+
+    :param m: Array of model predictions for each pointing
+    :param t: Array of elapsed times for each pointing
+    :param C: Array of observed counts for each pointing
+    :return: Maximum likelihood estimate of b
+    """
+
     t_t = np.sum(t)
     C_ = np.zeros(4)
     m_plus = np.zeros(4)
@@ -71,8 +103,6 @@ def b_maxL_4(m, t, C):
     C = np.sum(C_ * m_plus - t * m_cross).item()
     D = np.sum(C_ * m_cross - t * m_dot).item()
     E = np.sum(C_ * m_dot).item()
-
-    # print(A,B,C,D,E)
 
     alpha = -3 * B**2 / (8 * A**2) + C / A
     beta = B**3 / (8 * A**3) - B * C / (2 * A**2) + D / A
@@ -105,6 +135,17 @@ def b_maxL_4(m, t, C):
 
 @njit
 def logLcore(spec_binned, pointings, dets, resp_mats, num_sources, t_elapsed, counts):
+    """
+    Calculate the log-likelihood for a given set of parameters.
+
+    :param spec_binned: Binned spectrum
+    :param pointings: List of number of pointings
+    :param dets: List of number of live detectors
+    :param resp_mats: List of response matrices
+    :param num_sources: Number of sources
+    :param t_elapsed: List of elapsed times
+    :param counts: List of counts
+    """
     logL = 0
     for p_i in range(len(pointings)):
         for d_i in range(len(dets[p_i])):
@@ -133,9 +174,7 @@ def logLcore(spec_binned, pointings, dets, resp_mats, num_sources, t_elapsed, co
                 elif n_p == 4:
                     b = b_maxL_4(m_b, t_b, C_b)
                 else:
-                    print()
-                    print("b_maxL is not defined")
-                    print()
+                    log.warning("b_maxL is not defined")
                     return 0.0
                 for m_i in range(n_p):
                     logL += counts[p_i][m_i][d_i, e_i] * np.log(
