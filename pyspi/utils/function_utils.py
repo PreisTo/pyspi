@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 
 import h5py
-import numpy as np
 from astropy.time.core import Time, TimeDelta
 
 from pyspi.io.package_data import get_path_of_internal_data_dir
@@ -102,8 +101,8 @@ def find_needed_ids(time):
 
     try:
         id_number = list(mask_smaller * mask_larger).index(True)
-    except:
-        raise Exception("No pointing id contains this time...")
+    except Exception as e:
+        raise Exception("No pointing id contains this time...") from e
 
     return ids[id_number].decode("utf-8")
 
