@@ -1,7 +1,7 @@
 from astropy.coordinates import SkyCoord
 import numpy as np
 from IntegralQuery import SearchQuery, IntegralQuery, Filter, Range
-from IntegralPointingClustering import ClusteredQuery
+from pyspi.clustering.cluster_query import ClusteredQuery
 import astropy.io.fits as fits
 from astropy.table import Table
 from datetime import datetime
@@ -12,8 +12,6 @@ from pyspi.utils.livedets import get_live_dets
 import os
 import astropy.time as at
 import pickle
-
-# rsp_bases = tuple([ResponseDataRMF.from_version(i) for i in range(5)])
 
 
 def save_clusters(pointings, folder):
@@ -29,7 +27,7 @@ def load_clusters(folder, outliers=None):
     with open(f"{folder}/pointings.pickle", "rb") as f:
         pointings = pickle.load(f)
 
-    if not outliers is None:
+    if outliers is not None:
         pointings = remove_outlier_clusters(pointings, outliers)
 
     return pointings
@@ -63,9 +61,9 @@ def load_outliers(path, id):
 def extract_date_range(path):
     with fits.open(f"{path}/pointing.fits") as file:
         t = Table.read(file[1])
-        t1 = at.Time(f'{t["TSTART"][0]+2451544.5}', format="jd")
+        t1 = at.Time(f'{t["TSTART"][0] + 2451544.5}', format="jd")
         t1.format = "isot"
-        t2 = at.Time(f'{t["TSTOP"][-1]+2451544.5}', format="jd")
+        t2 = at.Time(f'{t["TSTOP"][-1] + 2451544.5}', format="jd")
         t2.format = "isot"
     return t1.value, t2.value
 

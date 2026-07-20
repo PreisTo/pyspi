@@ -1,7 +1,7 @@
 from astropy.coordinates import SkyCoord
 import numpy as np
-from IntegralQuery import SearchQuery, IntegralQuery, Filter, Range
-from IntegralPointingClustering import ClusteredQuery
+from pyspi.utils.query import SearchQuery, IntegralQuery, Filter, Range
+from .cluster_query import ClusteredQuery
 import astropy.io.fits as fits
 from astropy.table import Table
 from datetime import datetime
@@ -10,21 +10,22 @@ from pyspi.utils.response.spi_response_data import ResponseDataRMF
 from pyspi.utils.response.spi_response import ResponseRMFGenerator
 from pyspi.utils.livedets import get_live_dets
 import astropy.time as at
+import pickle
 
 
 class PointingClusters:
     def __init__(
         self,
-        orbit_paths,  # TODO: what
-        min_angle_dif,
-        max_angle_dif,
-        max_time_dif,
-        radius_around_source,
-        min_time_elapsed,
-        cluster_size_range,
+        center_ra,
+        center_dec,
+        orbit_paths,
+        min_angle_dif=1.5,
+        max_angle_dif=10,
+        max_time_dif=0.2,
+        min_time_elapsed=300,
+        radius_around_source=10.0,
+        cluster_size_range=(2, 2),
         random_angle_dif_range=None,
-        center_ra=83.6333,
-        center_dec=22.0144,
     ):
         self._orbit_paths = orbit_paths
         self._min_angle_dif = min_angle_dif
@@ -94,23 +95,8 @@ class PointingClusters:
             position=p,
             radius=f"{self._radius_around_source} degree",
         )
-        cat = IntegralQuery(searchquerry)
 
         scw_ids_all = None
-        for path in self._orbit_paths:
-            f = Filter(SCW_TYPE="POINTING", TIME=Range(*extract_date_range(path)))
-            if scw_ids_all:
-                scw_ids_all = np.append(
-                    scw_ids_all,
-                    cat.apply_filter(
-                        f, return_coordinates=True, remove_duplicates=True
-                    ),
-                    axis=0,
-                )
-            else:
-                scw_ids_all = cat.apply_filter(
-                    f, return_coordinates=True, remove_duplicates=True
-                )
 
         assert len(scw_ids_all) != 0, "There is no pointing for the given parameters!"
         scw_ids = []
@@ -208,3 +194,60 @@ class PointingClusters:
 
         self._scw_ids = np.array(scw_ids)
         self._scw_paths = paths
+
+
+import os
+
+
+def save_clusters(pointings, folder):
+    if not os.path.exists(f"./{folder}") and not os.path.exists(
+        folder
+    ):  # I hope this doesnt break anything
+        os.mkdir(folder)
+    with open(f"{folder}/pointings.pickle", "wb") as f:
+        pickle.dump(pointings, f)
+
+
+def load_clusters(folder, outliers=None):
+    with open(f"{folder}/pointings.pickle", "rb") as f:
+        pointings = pickle.load(f)
+
+    if not outliers is None:
+        pointings = remove_outlier_clusters(pointings, outliers)
+
+    return pointings
+
+
+def remove_outlier_clusters(pointings, outliers):
+    new_pointings = []
+    for cluster in pointings:
+        was_in = False
+        for cluster2 in outliers:
+            assert (
+                cluster2[1] != cluster[0][0]
+            ), "Outliers do not correspond to Clusters"
+            if cluster2[0] == cluster[0][0]:
+                was_in = True
+                assert (
+                    cluster2[1] == cluster[1][0]
+                ), "Outliers do not correspond to Clusters"
+                # continue
+        if not was_in:
+            new_pointings.append(cluster)
+    return tuple(new_pointings)
+
+
+def load_outliers(path, id):
+    with open(path, "rb") as f:
+        outliers = pickle.load(f)[id]
+    return outliers
+
+
+def extract_date_range(path):
+    with fits.open(f"{path}/pointing.fits") as file:
+        t = Table.read(file[1])
+        t1 = at.Time(f'{t["TSTART"][0]+2451544.5}', format="jd")
+        t1.format = "isot"
+        t2 = at.Time(f'{t["TSTOP"][-1]+2451544.5}', format="jd")
+        t2.format = "isot"
+    return t1.value, t2.value
