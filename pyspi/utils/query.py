@@ -1,264 +1,148 @@
-from dataclasses import dataclass, asdict
-from asciitree import LeftAligned
-from asciitree.drawing import BOX_DOUBLE, BoxStyle
-from typing import Union
-from datetime import datetime, timedelta
-import warnings
-from astroquery.heasarc import Heasarc, Conf
-import astropy.units as u
-from astropy.coordinates import SkyCoord
-import pandas as pd
+from dataclasses import dataclass
+from datetime import datetime
+
 import numpy as np
-
-heasarc = Heasarc()
-Conf.server.set("https://www.isdc.unige.ch/browse/w3query.pl")
-
-
-def _to_print_dict(conf):
-    out = {}
-
-    if not isinstance(conf, dict):
-
-        dummy = {}
-        dummy[f"{conf}"] = {}
-
-        return dummy
-
-    else:
-        for k, v in conf.items():
-
-            text = f"{k}"
-
-            out[text] = _to_print_dict(v)
-
-    return out
+import astropy.units as u
+from astropy.coordinates import SkyCoord, SkyOffsetFrame
+from astroquery.heasarc import Heasarc
 
 
-class BaseDataClass:
-    def show(self):
-        final = {}
-        final[type(self).__name__] = _to_print_dict(asdict(self))
-        tr = LeftAligned(draw=BoxStyle(gfx=BOX_DOUBLE, horiz_len=1))
-        print(tr(final))
+class SelectData:
+    def __init__(self, position: SkyCoord, radius: u.Quantity = 5 * u.deg):
+        self._heasarc = Heasarc()
+        self._position = position
+        self._radius = radius
+        self._min_good_spi = 100
 
+        self._query_region()
 
-@dataclass
-class Range(BaseDataClass):
-    """
-    Simple dataclass that represents a range
-    """
-
-    min_val: Union[str, float, None] = None
-    max_val: Union[str, float, None] = None
-
-
-@dataclass
-class Filter(BaseDataClass):
-    """
-    Dataclass to handle the filter parameters
-    """
-
-    SCW_ID: Union[str, None] = None
-    SCW_VER: Union[int, None] = None
-    SCW_TYPE: Union[int, None] = None
-    RA_X: Union[Range, None] = None
-    DEC_X: Union[Range, None] = None
-    TIME: Union[Range, None] = None
-    END_DATE: Union[Range, None] = None
-    TIME_ELAPSED: Union[Range, None] = None
-    OBS_ID: Union[str, None] = None
-    OBS_TYPE: Union[str, None] = None
-    PS: Union[str, None] = None
-    PI_NAME: Union[str, None] = None
-    GOOD_SPI: Union[Range, None] = None
-    GOOD_PICSIT: Union[Range, None] = None
-    GOOD_JMEX: Union[Range, None] = None
-    GOOD_JMEX1: Union[Range, None] = None
-    GOOD_JMEX2: Union[Range, None] = None
-    GOOD_OMC: Union[Range, None] = None
-    DSIZE: Union[Range, None] = None
-    _SEARCH_OFFSET: Union[Range, None] = None
-
-
-@dataclass
-class SearchQuery(BaseDataClass):
-    """
-    Dataclass to handle the inital search query parameters
-    """
-
-    object_name: Union[str, None] = None
-    position: Union[SkyCoord, None] = None
-    radius: Union[float, str, None] = None
-    mission: Union[str, None] = "integral_rev3_scw"
-    sortvar: Union[str, None] = "START_DATE"
-    resultmax: Union[int, None] = 0
-
-    @property
-    def object_dict(self):
+    def filter(
+        self,
+        min_good_spi: float = 100,
+        scw_id_range: (int, int) = (None, None),
+        time_range: (float, float) = (None, None),
+        obs_type: str = None,
+        radius: u.Quantity = None,
+    ):
         """
-        Get dict for the object modus => drop radius and position
-        :returns:
+        Filter the data based on the given criteria.
+
+        :param min_good_spi: Minimum number of good SPI time required (default: 100)
+        :type min_good_spi: float
+        :param scw_id_range: Tuple of (min_scw_id, max_scw_id) to filter by SCW ID range
+        (default: (None, None))
+        :type scw_id_range: (int, int)
+        :param time_range: Tuple of (start_time, end_time) to filter by time range must
+        be in MJD (default: (None, None))
+        :type time_range: (float, float)
+        :param obs_type: Observation type to filter by (default: None)
+        :type obs_type: str
+        :param radius: Radius to filter by (default: None, uses the initial radius)
+        :type radius: u.Quantity
         """
-        dic = asdict(self)
-        dic.pop("radius")
-        dic.pop("position")
-        return dic
+        self._min_good_spi = min_good_spi
+        if radius is not None:
+            self._radius = radius
 
-    @property
-    def region_dict(self):
-        """
-        Get dict for the region modus => drop object_name
-        :returns:
-        """
-        dic = asdict(self)
-        dic.pop("object_name")
-        return dic
+        self._query_region()  # we requery to ensure radius and min_good_spi are correct
 
+        tab = self._table.copy()
 
-class IntegralQuery:
-    def __init__(self, search_query: SearchQuery):
-        """
-        Init the Integral query object. Used to get the SCW_ID for a certain position or
-        object and apply different filters to it
-        """
-        assert search_query.object_name is not None or (
-            search_query.position is not None and search_query.radius is not None
-        ), "Please specify either object_name, or position and radius"
+        mask = np.ones(len(tab), dtype=bool)
 
-        if search_query.object_name:
-            self._table = heasarc.query_object(**search_query.object_dict)
+        scw_id = np.asarray(tab["scw_id"].filled("-1"), dtype=np.int64)
 
-        else:
-            self._table = heasarc.query_region(**search_query.region_dict)
+        if scw_id_range[0] is not None:
+            mask &= scw_id >= scw_id_range[0]
+        if scw_id_range[1] is not None:
+            mask &= scw_id <= scw_id_range[1]
 
-        self._format_table()
+        if time_range[0] is not None:
+            mask &= tab["end_date"] >= time_range[0]
+        if time_range[1] is not None:
+            mask &= tab["start_date"] <= time_range[1]
 
-    def _format_table(self):
-        """
-        Format the table
-        :returns:
-        """
-        # BB: self._table
-        self._table.convert_bytestring_to_unicode()
-        self._table = self._table.to_pandas()
+        if obs_type is not None:
+            mask &= tab["obs_type"] == obs_type
 
-        int_columns = ["SCW_VER"]
-        float_columns = [
-            "RA_X",
-            "DEC_X",
-            "GOOD_SPI",
-            "GOOD_PICSIT",
-            "GOOD_ISGRI",
-            "GOOD_JEMX",
-            "GOOD_JEMX1",
-            "GOOD_JEMX2",
-            "GOOD_OMC",
-            "DSIZE",
-        ]
-        string_columns = ["SCW_ID", "SCW_TYPE", "OBS_TYPE", "OBS_ID", "PS", "PI_NAME"]
-        datetime_columns = ["START_DATE", "END_DATE"]
+        tab = tab[mask]
+        self._table = tab
 
-        for c in int_columns:
-            self._table[c] = self._table[c].astype(int)
+    def _query_region(self, **kwargs):
+        tab = self._heasarc.query_region(
+            self._position, catalog="intscw", radius=self._radius, **kwargs
+        )
+        tab = self._default_selections(tab)
+        self._table = tab
 
-        for c in float_columns:
-            self._table[c] = self._table[c].str.strip()
-            mask = self._table.copy()[c] == ""
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                self._table[c].loc[mask] = 0
-            self._table[c] = self._table[c].astype(float)
-
-        for c in string_columns:
-            self._table[c] = self._table[c].str.strip()
-
-        for c in datetime_columns:
-            self._table[c] = pd.to_datetime(self._table[c])
-
-    def sort_by(self, sortvar):
-        """
-        Sort the tables by a new Variable
-        :param sortvar: Variable to use for the sort
-        :returns:
-        """
-        self._table = self._table.sort_values(sortvar)
-
-    def _internal_apply_filter(self, filter_ob):
-        new_table = self._table.copy()
-        for key, value in asdict(filter_ob).items():
-            if value:
-                if type(value) is dict:
-                    if key == "TIME":
-                        if value["min_val"]:
-                            new_table = new_table[
-                                new_table["START_DATE"]
-                                >= datetime.fromisoformat(value["min_val"])
-                            ]
-                        if value["max_val"]:
-                            new_table = new_table[
-                                new_table["END_DATE"]
-                                <= datetime.fromisoformat(value["max_val"])
-                            ]
-                    elif key == "TIME_ELAPSED":
-                        if value["min_val"]:
-                            new_table = new_table[
-                                (new_table["END_DATE"] - new_table["START_DATE"])
-                                >= timedelta(seconds=value["min_val"])
-                            ]
-                        if value["max_val"]:
-                            new_table = new_table[
-                                (new_table["END_DATE"] - new_table["START_DATE"])
-                                <= timedelta(seconds=value["max_val"])
-                            ]
-                    else:
-                        if value["min_val"]:
-                            new_table = new_table[new_table[key] >= value["min_val"]]
-                        if value["max_val"]:
-                            new_table = new_table[new_table[key] <= value["max_val"]]
-                else:
-                    new_table = new_table[new_table[key] == value]
-
-        return new_table
-
-    def apply_filter(
-        self, filter_ob: Filter, return_coordinates=False, remove_duplicates=True
-    ) -> np.array:
-        """
-        Apply a filter to the base table
-        :param filter_ob: Filter Object with all the filter parameters
-        :param return_coordintes: Specifies if coordintes should be returned
-        :returns:
-        """
-        new_table = self._internal_apply_filter(filter_ob)
-
-        if remove_duplicates:
-            new_table = new_table.drop_duplicates("SCW_ID", keep="last")
-
-        if not return_coordinates:
-            return new_table["SCW_ID"].to_numpy()
-        else:
-            return np.concatenate(
-                (
-                    new_table[["SCW_ID", "RA_X", "DEC_X"]].to_numpy(),
-                    np.array([new_table["START_DATE"].dt.to_pydatetime()]).T,
-                ),
-                axis=1,
-            )
-
-    def apply_filter_on_revolutions(self, filter_ob: Filter):
-        new_table = self._internal_apply_filter(filter_ob)
-        new_table = new_table["SCW_ID"].to_numpy()
-        revolutions = {}
-        for pointing in new_table:
-            if pointing[:4] in revolutions:
-                revolutions[pointing[:4]] += 1
-            else:
-                revolutions[pointing[:4]] = 1
-        return revolutions
+    def _default_selections(self, tab):
+        tab = tab[tab["scw_type"] == "pointing"]
+        mask = tab["good_spi"] >= self._min_good_spi
+        tab = tab[mask]
+        return tab
 
     @property
     def table(self):
-        """
-        :returns: Base Table of Query
-        """
         return self._table
+
+
+@dataclass
+class Pointing:
+    """
+    Dataclass that represents a single Pointing. Contains its coordinates, scw_id,
+    index and its cluster may be added later
+    """
+
+    scw_id: str
+    sky_coords: SkyCoord
+    start_time: datetime
+    index: int
+    cluster: Cluster = None
+
+    def angle_between_three_pointings(
+        self,
+        pointing2: "Pointing",
+        pointing3: "Pointing",
+        angle_weight: float,
+        time_weight: float,
+    ) -> float:
+        """Returns the angle between three different poitings
+        Angle between the vector self -> poiting2 and vector self -> pointing3
+        """
+
+        origin = SkyCoord(
+            self.sky_coords.ra.deg,
+            (self.sky_coords.dec.deg % 180.0) - 90.0,
+            frame="icrs",
+            unit="deg",
+        )
+        origin_Frame = SkyOffsetFrame(origin=origin)
+
+        p1 = self.sky_coords.transform_to(origin_Frame)
+        p2 = pointing2.sky_coords.transform_to(origin_Frame)
+        p3 = pointing3.sky_coords.transform_to(origin_Frame)
+
+        a_a = p2.lon.deg - p3.lon.deg
+        a_d2 = abs(p1.lat.deg - p2.lat.deg) * angle_weight
+        a_d3 = abs(p1.lat.deg - p3.lat.deg) * angle_weight
+
+        t_d2 = (
+            (pointing2.start_time - self.start_time).total_seconds()
+            / 86400
+            * time_weight
+        )
+        t_d3 = (
+            (pointing3.start_time - self.start_time).total_seconds()
+            / 86400
+            * time_weight
+        )
+
+        return np.arccos(
+            np.clip(
+                (a_d2 * a_d3 * np.cos(np.deg2rad(a_a)) + t_d2 * t_d3)
+                / np.linalg.norm([a_d2, t_d2])
+                / np.linalg.norm([a_d3, t_d3]),
+                -1.0,
+                1.0,
+            )
+        )
