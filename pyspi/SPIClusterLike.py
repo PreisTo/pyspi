@@ -1,0 +1,198 @@
+import numpy as np
+from threeML import PluginPrototype
+from pyspi.utils.function_utils import find_response_version
+from pyspi.utils.response.spi_response import ResponseRMFGenerator
+from pyspi.utils.livedets import get_live_dets
+from rsp_bases import rsp_bases
+
+
+
+from MultinestClusterFit import (
+    extract_pointing_info,
+    generate_resp_mat,
+    logLcore,
+    powerlaw_binned_spectrum,
+)
+
+
+
+
+class SPIClusterPlugin(PluginPrototype):
+    def __init__(
+        self,
+        name,
+        pointings,
+        energy_range,
+        emod,
+        binning_func,
+        source_spectrum_powerlaw_binning=True,
+    ):
+        super(SPIClusterPlugin, self).__init__(name, {})
+
+
+        self._pointings = pointings
+        self._energy_range = energy_range
+        self._emod = emod
+        self._binning_func = binning_func
+        self._source_spectrum_powerlaw_binning = source_spectrum_powerlaw_binning
+        self._prepare_fit_data()
+
+
+
+    def set_model(self, likelihood_model_instance):
+        self._source_model = likelihood_model_instance
+        self._find_updatable_sources()
+        self._initialize_resp_mats()
+
+    def get_log_like(self):
+        num_sources = len(self._source_model.sources)
+        spec_binned = np.zeros((num_sources, len(self._emod) - 1))
+
+        try:
+            for i, source in enumerate(self._source_model.sources.values()):
+                spec = source(self._emod)
+                if self._source_spectrum_powerlaw_binning:
+                    spec_binned[i, :] = powerlaw_binned_spectrum(self._emod, spec)
+                else:
+                    spec_binned[i, :] = (
+                        (self._emod[1:] - self._emod[:-1]) * (spec[:-1] + spec[1:]) / 2
+                    )
+
+            if 1 in self._updatable_sources:
+                self._update_resp_mats()
+
+            logL = logLcore(
+                spec_binned,
+                self._pointings,
+                self._dets,
+                self._resp_mats,
+                num_sources,
+                self._t_elapsed,
+                self._counts,
+            )
+
+            if not np.isfinite(logL):
+                return -1e10
+            return logL
+
+        except Exception:
+            return -1e10
+
+    def inner_fit(self):
+        return self.get_log_like()
+
+
+
+
+
+    def _prepare_fit_data(self):
+        ebs, counts, dets, t_elapsed, t_start = [], [], [], [], []
+
+
+        for combination in self._pointings:
+            c_time_start, c_time_elapsed = [], []
+            for p_i, pointing in enumerate(combination):
+                time_start, time_elapsed, energy_bins, counts_f = extract_pointing_info(
+                    pointing[1], pointing[0]
+                )
+                c_time_start.append(time_start)
+                dets_temp = get_live_dets(time=time_start, event_types=["single"])
+                c_time_elapsed.append(time_elapsed[dets_temp])
+
+
+                if p_i == 0:
+                    dets_0 = dets_temp
+                    energy_bins_0 = energy_bins
+                    c_counts_f = counts_f[dets_0]
+                else:
+                    c_counts_f = np.append(c_counts_f, counts_f[dets_0], axis=0)
+                    assert np.array_equal(dets_0, dets_temp), (
+                        f"Active detectors are not the same for "
+                        f"{combination[0][0]} and {combination[p_i][0]}"
+                    )
+                    assert np.array_equal(energy_bins_0, energy_bins), (
+                        f"Energy bins are not the same for "
+                        f"{combination[0][0]} and {combination[p_i][0]}"
+                    )
+
+
+
+            eb, c = self._binning_func(energy_bins_0, c_counts_f, self._energy_range)
+            nd = len(dets_0)
+            counts.append(tuple(c[i * nd:(i + 1) * nd] for i in range(len(combination))))
+            ebs.append(eb)
+            t_start.append(tuple(c_time_start))
+            dets.append(dets_0)
+            t_elapsed.append(tuple(c_time_elapsed))
+
+
+
+        self._ebs = tuple(ebs)
+        self._counts = tuple(counts)
+        self._dets = tuple(dets)
+        self._t_elapsed = tuple(t_elapsed)
+        self._t_start = tuple(t_start)
+
+
+
+    def _initialize_resp_mats(self):
+        resp_mats, rmfs = [], []
+        for count, combination in enumerate(self._pointings):
+            source_resp_mats = []
+            dets = self._dets[count]
+            ebs = self._ebs[count]
+            for source in self._source_model.sources.values():
+                combination_resp_mats, combination_rmfs = [], []
+                for pointing in range(len(combination)):
+                    time = self._t_start[count][pointing]
+                    version = find_response_version(time)
+                    rsp_base = rsp_bases[version]
+                    pointing_rmfs = tuple(
+                        ResponseRMFGenerator.from_time(time, d, ebs, self._emod, rsp_base)
+                        for d in dets
+                    )
+
+
+                    combination_resp_mats.append(
+                        generate_resp_mat(
+                            pointing_rmfs,
+                            len(dets),
+                            len(ebs),
+                            len(self._emod),
+                            source.position.get_ra(),
+                            source.position.get_dec(),
+                        )
+                    )
+                    combination_rmfs.append(pointing_rmfs)
+                source_resp_mats.append(tuple(combination_resp_mats))
+            resp_mats.append(tuple(source_resp_mats))
+            rmfs.append(tuple(combination_rmfs))
+        self._resp_mats = tuple(resp_mats)
+        if 1 in self._updatable_sources:
+            self._updatable_rmfs = tuple(rmfs)
+
+
+    def _update_resp_mats(self):
+        for count, combination in enumerate(self._pointings):
+            for source_num, source in enumerate(self._source_model.sources.values()):
+                if self._updatable_sources[source_num] == 1:
+                    for pointing in range(len(combination)):
+                        self._resp_mats[count][source_num][pointing][:, :, :] = generate_resp_mat(
+                            self._updatable_rmfs[count][pointing],
+                            len(self._dets[count]),
+                            len(self._ebs[count]),
+                            len(self._emod),
+                            source.position.get_ra(),
+                            source.position.get_dec(),
+                        )
+
+
+    def _find_updatable_sources(self):
+        keywords = ["position"]
+        self._updatable_sources = np.zeros(len(self._source_model.sources), np.int8)
+        for s_i, source in enumerate(self._source_model.sources.values()):
+            for parameter in source.free_parameters.values():
+                first_pos = parameter.path.find(".")
+                second_pos = parameter.path.find(".", first_pos + 1)
+                if parameter.path[first_pos + 1:second_pos] in keywords:
+                    self._updatable_sources[s_i] = 1
