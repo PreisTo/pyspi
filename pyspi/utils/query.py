@@ -22,7 +22,7 @@ class SelectData:
 
     def filter(
         self,
-        min_good_spi: float = 100,
+        min_good_spi: float = 300,
         scw_id_range: (int, int) = (None, None),
         time_range: (float, float) = (None, None),
         obs_type: str = None,
@@ -31,7 +31,7 @@ class SelectData:
         """
         Filter the data based on the given criteria.
 
-        :param min_good_spi: Minimum number of good SPI time required (default: 100)
+        :param min_good_spi: Minimum number of good SPI time required (default: 300)
         :type min_good_spi: float
         :param scw_id_range: Tuple of (min_scw_id, max_scw_id) to filter by SCW ID range
         (default: (None, None))
