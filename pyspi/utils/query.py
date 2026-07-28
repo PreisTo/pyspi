@@ -5,6 +5,10 @@ import numpy as np
 import astropy.units as u
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astroquery.heasarc import Heasarc
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyspi.clustering.cluster_query import Cluster
 
 
 class SelectData:
@@ -97,7 +101,7 @@ class Pointing:
     sky_coords: SkyCoord
     start_time: datetime
     index: int
-    cluster: Cluster = None
+    cluster: "Cluster" = None
 
     def angle_between_three_pointings(
         self,
