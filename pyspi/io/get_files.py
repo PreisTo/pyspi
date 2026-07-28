@@ -109,7 +109,12 @@ def get_and_save_file(extension, pointing_id, access="isdc"):
 def get_and_save_isla(pointing_id):
 
     isla = IntegralClass()
-    isla.download_science_windows(science_windows=[pointing_id], output_file="temp")
+    save_path = os.path.join(
+        get_path_of_external_data_dir(), "pointing_data", pointing_id
+    )
+    os.makedirs(save_path, exist_ok=True)
+
+    isla.download_science_windows(science_windows=[pointing_id], output_file=save_path)
 
 
 def get_files(pointing_id, access="isdc"):
