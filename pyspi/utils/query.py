@@ -89,6 +89,10 @@ class SelectData:
     def table(self):
         return self._table
 
+    @property
+    def position(self):
+        return self._position
+
 
 @dataclass
 class Pointing:
