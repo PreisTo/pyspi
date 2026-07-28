@@ -3,7 +3,10 @@ from astropy.coordinates import SkyCoord
 from datetime import datetime
 from numba import njit
 from time import time
-from pyspi.clustering.pointing import Pointing
+import logging
+from pyspi.utils.query import Pointing
+
+log = logging.getLogger(__name__)
 
 
 @njit
@@ -205,42 +208,39 @@ class ClusteredQuery:
         Clusters composed of Pointings.
 
         :param scw_ids: numpy array with SCW_ID in first column, RA (deg) in second, DEC
-        (deg) in third, and START_DATE (datetime) in the fourth column. Has to be sorted
-        by start_date
-
+            (deg) in third, and START_DATE (datetime) in the fourth column. Has to be
+            sorted by start_date
         :param angle_weight: determines how much effective distance a seperation of 1
-        degree is
-
+            degree is
         :param time_weight: determines how much effective distance a seperation of 1 day
-        is
-
-        :param max_distance: the maximum effective distance two pointings in a cluster may have
-
-        :param min_ang_distance: the minimum angular separation (deg) two pointing in a cluster may have
-
-        :param max_ang_distance: the maximum angular separation (deg) two pointing in a cluster may have
-
-        :param cluster_size_range: the smallest and largest cluster sizes the algorithm aims to create
-
-        :param cluster_size_preference_threshold: the thresholds for average distance ratios that are considered
-        when adding a Pointing to Cluster within the cluster_size_range
-        Example: if cluster_size_range = (3,5), then cluster_size_preference_threshold = (4.,5.) would mean that
-        a fourth pointing is only added to a cluster of 3 if the average distance does not increase four-fold,
-        and a fith would only be added if the average distance does not increase five-fold
-        Has to contain one element for each cluster size within the cluster_size_range
-
-        :param failed_improvements_max: how many successive failed improvements are allowed before a
-        Region is declared finished
-        Use this parameter to determine the trade-off between run time and quality of clusters
-
-        :param suboptimal_cluster_size: the maximum cluster size that is used to begin an improvement
-        Cannot be smaller than 1
-
-        :param close_suboptimal_cluster_size: the maximum cluster size that is paired with a suboptimal cluster
-        to attempt an improvement.
-        Cannot be smaller than suboptimal_cluster_size
-
-        :param track_performance: Should the algorithm print various performance statistics after running?
+            is
+        :param max_distance: the maximum effective distance two pointings in a cluster
+            may have
+        :param min_ang_distance: the minimum angular separation (deg) two pointing in a
+            cluster may have
+        :param max_ang_distance: the maximum angular separation (deg) two pointing in a
+            cluster may have
+        :param cluster_size_range: the smallest and largest cluster sizes the algorithm
+            aims to create
+        :param cluster_size_preference_threshold: the thresholds for average distance
+            ratios that are considered when adding a Pointing to Cluster within the
+            cluster_size_range
+            Example: if cluster_size_range = (3,5), then
+            cluster_size_preference_threshold = (4.,5.) would mean that a fourth
+            pointing is only added to a cluster of 3 if the average distance does not
+            increase four-fold, and a fith would only be added if the average distance
+            does not increase five-fold. Has to contain one element for each cluster
+            size within the cluster_size_range
+        :param failed_improvements_max: how many successive failed improvements are
+            allowed before a Region is declared finished. Use this parameter to
+            determine the trade-off between run time and quality of clusters
+        :param suboptimal_cluster_size: the maximum cluster size that is used to begin
+            an improvement. Cannot be smaller than 1
+        :param close_suboptimal_cluster_size: the maximum cluster size that is paired
+            with a suboptimal cluster to attempt an improvement. Cannot be smaller than
+            suboptimal_cluster_size
+        :param track_performance: Should the algorithm print various performance
+            statistics after running?
         """
 
         assert len(cluster_size_preference_threshold) == (
@@ -341,47 +341,22 @@ class ClusteredQuery:
                 for cluster in clusters:
                     self._cluster_sizes[cluster.num_pointings] += 1
 
-        # print()
-        # print("All Done")
-        # clustered = set()
-        # n = 0
-
-        # for key, value in self.clusters.items():
-        #     for c in value:
-        #         print(f"{c.indices}, {c.avg_distance}")
-        #         clustered = clustered | set(c.indices)
-        #         n += c.num_pointings
-
-        # missing = [i for i in range(self._num_pointings) if i not in clustered]
-        # print()
-        # print(missing)
-        # print(self._num_pointings, n)
-        # print()
-
         if self._track_performance:
             end_time = time()
-            print("Performance Review!")
-            print()
-            print("Run Time:")
-            print(f"{(end_time - start_time):.2f}s")
-            print()
-            print("Region Sizes:")
-            print(sorted(self._region_sizes.items()))
-            print()
-            print("Initial Cluster Sizes:")
-            print(self._initial_cluster_sizes)
-            print()
-            print("Final Cluster Sizes:")
-            print(self._cluster_sizes)
-            print()
-            print("Attempted Improvements:")
-            print(self._attempted_improvements)
-            print()
-            print("Implemented Improvements:")
-            print(self._implemented_improvements)
-            print()
-            print("Dead-End Clustering Paths:")
-            print(self._dead_ends)
+            log.info("Performance Review!")
+            log.info("Run Time:")
+            log.info(f"{(end_time - start_time):.2f}s")
+            log.info("Region Sizes:")
+            log.info(sorted(self._region_sizes.items()))
+            log.info("Initial Cluster Sizes:")
+            log.info(self._initial_cluster_sizes)
+            log.info("Final Cluster Sizes:")
+            log.info(self._cluster_sizes)
+            log.info("Attempted Improvements:")
+            log.info(self._attempted_improvements)
+            log.info("Implemented Improvements:")
+            log.info(self._implemented_improvements)
+            log.info("Dead-End Clustering Paths:")
 
     def initialize_size_dictionary(self) -> dict[list]:
         """Returns dictionary with empty list for each cluster size"""
