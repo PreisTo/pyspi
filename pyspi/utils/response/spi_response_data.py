@@ -6,6 +6,9 @@ import h5py
 import numpy as np
 
 from pyspi.io.package_data import get_path_of_internal_data_dir
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def load_rmf_non_ph_1():
@@ -103,31 +106,31 @@ class ResponseData:
         )
 
         if version == 0:
-            print(
+            log.info(
                 "Using the irfs that are valid between Start"
                 " and 03/07/06 06:00:00 (YY/MM/DD HH:MM:SS)"
             )
 
         elif version == 1:
-            print(
+            log.info(
                 "Using the irfs that are valid between 03/07/06 06:00:00"
                 " and 04/07/17 08:20:06 (YY/MM/DD HH:MM:SS)"
             )
 
         elif version == 2:
-            print(
+            log.info(
                 "Using the irfs that are valid between 04/07/17 08:20:06"
                 " and 09/02/19 09:59:57 (YY/MM/DD HH:MM:SS)"
             )
 
         elif version == 3:
-            print(
+            log.info(
                 "Using the irfs that are valid between 09/02/19 09:59:57"
                 " and 10/05/27 12:45:00 (YY/MM/DD HH:MM:SS)"
             )
 
         else:
-            print(
+            log.info(
                 "Using the irfs that are valid between 10/05/27 12:45:00"
                 " and present (YY/MM/DD HH:MM:SS)"
             )

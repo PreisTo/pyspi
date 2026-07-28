@@ -4,11 +4,8 @@ from typing import Dict, Optional, Union
 import numpy as np
 from astromodels import Model, Parameter
 from astromodels.functions.priors import Cosine_Prior, Uniform_prior
-from threeML import PluginPrototype
-from threeML.io.file_utils import sanitize_filename
 from threeML.io.logging import setup_logger
 from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
-from threeML.plugins.SpectrumLike import SpectrumLike
 
 from pyspi.utils.response.spi_drm import SPIDRM
 
@@ -238,18 +235,22 @@ class SPILikeGRB(DispersionSpectrumLike):
         self, min_value: Union[int, float] = 0.5, max_value: Union[int, float] = 1
     ) -> None:
         """
-        Activate the use of the effective area correction, which is a multiplicative factor in front of the model which
-        might be used to mitigate the effect of intercalibration mismatch between different instruments.
-        NOTE: do not use this is you are using only one detector, as the multiplicative constant will be completely
-        degenerate with the normalization of the model.
-        NOTE2: always keep at least one multiplicative constant fixed to one (its default value), when using this
-        with other OGIPLike-type detectors
-        :param min_value: minimum allowed value (default: 0.8, corresponding to a 20% - effect)
-        :param max_value: maximum allowed value (default: 1.2, corresponding to a 20% + effect
+        Activate the use of the effective area correction, which is a multiplicative
+        factor in front of the model which might be used to mitigate the effect of
+        intercalibration mismatch between different instruments.
+        NOTE: do not use this is you are using only one detector, as the multiplicative
+        constant will be completely degenerate with the normalization of the model.
+        NOTE2: always keep at least one multiplicative constant fixed to one (its
+        default value), when using this with other OGIPLike-type detectors
+        :param min_value: minimum allowed value (default: 0.8, corresponding to a 20%
+                                                 - effect)
+        :param max_value: maximum allowed value (default: 1.2, corresponding to a 20%
+                                                 + effect
         :return:
         """
         log.info(
-            f"{self._name} is using psd efficiensy (between {min_value} and {max_value})"
+            f"{self._name} is using psd efficiensy (between {min_value} and"
+            f" {max_value})"
         )
         self._psd_eff.free = True
         self._psd_eff.bounds = (min_value, max_value)
@@ -260,7 +261,8 @@ class SPILikeGRB(DispersionSpectrumLike):
 
     def fix_psd_eff_correction(self, value: Union[int, float] = 1) -> None:
         """
-        Fix the multiplicative factor (see use_effective_area_correction) to the provided value (default: 1)
+        Fix the multiplicative factor (see use_effective_area_correction) to the
+                                                 provided value (default: 1)
         :param value: new value (default: 1, i.e., no correction)
         :return:
         """
