@@ -3,11 +3,8 @@ from threeML import PluginPrototype
 from pyspi.utils.function_utils import find_response_version
 from pyspi.utils.response.spi_response import ResponseRMFGenerator
 from pyspi.utils.livedets import get_live_dets
-from rsp_bases import rsp_bases
-
-
-
-from MultinestClusterFit import (
+from pyspi.utils.rsp_bases import rsp_bases
+from pyspi.utils.cluster_fit_core import (
     extract_pointing_info,
     generate_resp_mat,
     logLcore,
@@ -27,27 +24,28 @@ class SPIClusterPlugin(PluginPrototype):
         binning_func,
         source_spectrum_powerlaw_binning=True,
     ):
+
         super(SPIClusterPlugin, self).__init__(name, {})
-
-
         self._pointings = pointings
         self._energy_range = energy_range
         self._emod = emod
         self._binning_func = binning_func
         self._source_spectrum_powerlaw_binning = source_spectrum_powerlaw_binning
+        self._n_calls = 0
+        self._n_success = 0
+        self._n_naninf = 0
+        self._exc_counts = {}
         self._prepare_fit_data()
-
 
 
     def set_model(self, likelihood_model_instance):
         self._source_model = likelihood_model_instance
         self._find_updatable_sources()
         self._initialize_resp_mats()
-
     def get_log_like(self):
+        self._n_calls += 1
         num_sources = len(self._source_model.sources)
         spec_binned = np.zeros((num_sources, len(self._emod) - 1))
-
         try:
             for i, source in enumerate(self._source_model.sources.values()):
                 spec = source(self._emod)
@@ -57,9 +55,9 @@ class SPIClusterPlugin(PluginPrototype):
                     spec_binned[i, :] = (
                         (self._emod[1:] - self._emod[:-1]) * (spec[:-1] + spec[1:]) / 2
                     )
-
             if 1 in self._updatable_sources:
                 self._update_resp_mats()
+
 
             logL = logLcore(
                 spec_binned,
@@ -70,25 +68,42 @@ class SPIClusterPlugin(PluginPrototype):
                 self._t_elapsed,
                 self._counts,
             )
-
             if not np.isfinite(logL):
+                self._n_naninf += 1
                 return -1e10
+            self._n_success += 1
             return logL
 
-        except Exception:
+
+        except Exception as e:
+            key = f"{type(e).__name__}: {e}"
+            self._exc_counts[key] = self._exc_counts.get(key, 0) + 1
             return -1e10
+
+
+    def report_call_tally(self):
+        print("\n" + "=" * 70)
+        print(f"DIAGNOSTIC: {self._name} get_log_like call tally")
+        print(f"  total calls:        {self._n_calls}")
+        print(f"  succeeded (finite): {self._n_success}")
+        print(f"  NaN/inf (no exc.):  {self._n_naninf}")
+        print(f"  exceptions:         {sum(self._exc_counts.values())}")
+        if self._exc_counts:
+            print("  exception breakdown:")
+            for msg, count in sorted(self._exc_counts.items(), key=lambda kv: -kv[1]):
+                print(f"    {count:>5}x  {msg}")
+        if self._n_calls and self._n_success == 0:
+            print("  !!! WARNING: ZERO successful calls -- this fit's "
+                  "result is meaningless (pure prior), not a real "
+                  "measurement. Do not trust it.")
+        print("=" * 70 + "\n")
 
     def inner_fit(self):
         return self.get_log_like()
 
 
-
-
-
     def _prepare_fit_data(self):
         ebs, counts, dets, t_elapsed, t_start = [], [], [], [], []
-
-
         for combination in self._pointings:
             c_time_start, c_time_elapsed = [], []
             for p_i, pointing in enumerate(combination):
@@ -99,11 +114,11 @@ class SPIClusterPlugin(PluginPrototype):
                 dets_temp = get_live_dets(time=time_start, event_types=["single"])
                 c_time_elapsed.append(time_elapsed[dets_temp])
 
-
                 if p_i == 0:
                     dets_0 = dets_temp
                     energy_bins_0 = energy_bins
                     c_counts_f = counts_f[dets_0]
+
                 else:
                     c_counts_f = np.append(c_counts_f, counts_f[dets_0], axis=0)
                     assert np.array_equal(dets_0, dets_temp), (
@@ -114,9 +129,6 @@ class SPIClusterPlugin(PluginPrototype):
                         f"Energy bins are not the same for "
                         f"{combination[0][0]} and {combination[p_i][0]}"
                     )
-
-
-
             eb, c = self._binning_func(energy_bins_0, c_counts_f, self._energy_range)
             nd = len(dets_0)
             counts.append(tuple(c[i * nd:(i + 1) * nd] for i in range(len(combination))))
@@ -132,6 +144,7 @@ class SPIClusterPlugin(PluginPrototype):
         self._dets = tuple(dets)
         self._t_elapsed = tuple(t_elapsed)
         self._t_start = tuple(t_start)
+
 
 
 
@@ -151,8 +164,6 @@ class SPIClusterPlugin(PluginPrototype):
                         ResponseRMFGenerator.from_time(time, d, ebs, self._emod, rsp_base)
                         for d in dets
                     )
-
-
                     combination_resp_mats.append(
                         generate_resp_mat(
                             pointing_rmfs,
@@ -172,6 +183,7 @@ class SPIClusterPlugin(PluginPrototype):
             self._updatable_rmfs = tuple(rmfs)
 
 
+
     def _update_resp_mats(self):
         for count, combination in enumerate(self._pointings):
             for source_num, source in enumerate(self._source_model.sources.values()):
@@ -185,6 +197,7 @@ class SPIClusterPlugin(PluginPrototype):
                             source.position.get_ra(),
                             source.position.get_dec(),
                         )
+
 
 
     def _find_updatable_sources(self):
