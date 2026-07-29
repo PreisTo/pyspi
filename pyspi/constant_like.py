@@ -1,15 +1,15 @@
+import logging
 from typing import Optional
 
 import numpy as np
 from astromodels.core.model import Model
 from astromodels.functions.priors import Cosine_Prior, Uniform_prior
 from threeML.plugin_prototype import PluginPrototype
+
+from pyspi.clustering.pointing import PointingClusters
 from pyspi.utils.likelihood_helpers import logLcore
 from pyspi.utils.query import SelectData
-from pyspi.clustering.pointing import PointingClusters
-
 from pyspi.utils.response.spi_drm import SPIDRM
-import logging
 
 log = logging.getLogger(__name__)
 

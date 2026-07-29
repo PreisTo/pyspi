@@ -1,11 +1,11 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-import numpy as np
 import astropy.units as u
+import numpy as np
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astroquery.heasarc import Heasarc
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pyspi.clustering.cluster_query import Cluster

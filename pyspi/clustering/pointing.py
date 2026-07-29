@@ -1,8 +1,10 @@
-import numpy as np
-from astropy.time import Time
-from pyspi.clustering.cluster_query import ClusteredQuery
 import os
 import pickle
+
+import numpy as np
+from astropy.time import Time
+
+from pyspi.clustering.cluster_query import ClusteredQuery
 
 
 def save_clusters(pointings, folder):

@@ -1,9 +1,10 @@
 import copy
-import os
-import numpy as np
 import logging
+import os
 
+import numpy as np
 from astropy.io import fits
+
 from pyspi.io.get_files import get_files
 from pyspi.io.package_data import get_path_of_external_data_dir
 from pyspi.utils.function_utils import (

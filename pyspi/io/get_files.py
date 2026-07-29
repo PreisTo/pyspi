@@ -5,7 +5,6 @@ from shutil import copyfile
 from urllib.error import URLError
 
 from astropy.utils.data import download_file
-
 from astroquery.esa.integral import IntegralClass
 
 from pyspi.io.file_utils import file_existing_and_readable

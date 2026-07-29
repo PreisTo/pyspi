@@ -1,9 +1,8 @@
 import numpy as np
 from threeML.utils.data_builders.time_series_builder import TimeSeriesBuilder
 from threeML.utils.spectrum.binned_spectrum import BinnedSpectrumWithDispersion
-from threeML.utils.time_series.event_list import (
-    EventListWithLiveTime,
-)
+from threeML.utils.time_series.event_list import EventListWithLiveTime
+
 from .science_window import SPISWFile, SPISWFileGRB
 
 

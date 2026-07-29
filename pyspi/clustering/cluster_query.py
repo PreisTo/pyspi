@@ -1,9 +1,11 @@
+import logging
+from datetime import datetime
+from time import time
+
 import numpy as np
 from astropy.coordinates import SkyCoord
-from datetime import datetime
 from numba import njit
-from time import time
-import logging
+
 from pyspi.utils.query import Pointing
 
 log = logging.getLogger(__name__)

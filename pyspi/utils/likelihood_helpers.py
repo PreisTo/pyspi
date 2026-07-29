@@ -1,6 +1,7 @@
+import logging
+
 import numpy as np
 from numba import njit
-import logging
 
 log = logging.getLogger(__name__)
 
