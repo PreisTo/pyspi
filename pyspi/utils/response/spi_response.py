@@ -1,22 +1,26 @@
+import copy
 import os
 from datetime import datetime
+
 import numpy as np
 import scipy.interpolate as interpolate
 from astropy.time.core import Time
+from interpolation import interp
 from IPython.display import HTML
 from numba import njit
-from interpolation import interp
-import copy
 
 from pyspi.io.get_files import get_files
-from pyspi.io.package_data import (get_path_of_internal_data_dir,
-                                   get_path_of_external_data_dir)
-from pyspi.utils.response.spi_pointing import SPIPointing
-from pyspi.utils.response.spi_frame import (transform_icrs_to_spi,
-                                            transform_spi_to_icrs)
-from pyspi.utils.response.spi_response_data import (ResponseDataPhotopeak,
-                                                    ResponseDataRMF)
+from pyspi.io.package_data import (
+    get_path_of_external_data_dir,
+    get_path_of_internal_data_dir,
+)
 from pyspi.utils.function_utils import find_needed_ids
+from pyspi.utils.response.spi_frame import transform_icrs_to_spi, transform_spi_to_icrs
+from pyspi.utils.response.spi_pointing import SPIPointing
+from pyspi.utils.response.spi_response_data import (
+    ResponseDataPhotopeak,
+    ResponseDataRMF,
+)
 
 
 @njit
@@ -47,13 +51,13 @@ def log_interp1d(x_new, x_old, y_old):
     # log of all
     logx = np.log10(x_old)
     logxnew = np.log10(x_new)
-    
+
     # Avoid nan entries for yy=0 entries
     logy = np.log10(np.where(y_old <= 0, 1e-99, y_old))
-    
+
     lin_interp = interp(logx, logy, logxnew)
 
-    return np.power(10., lin_interp)
+    return np.power(10.0, lin_interp)
 
 
 @njit
@@ -61,24 +65,25 @@ def add_frac(ph_matrix, i, idx, ebounds, einlow, einhigh):
     """
     Recursive Funktion to get the fraction of einlow...
     """
-    if idx+1 == len(ebounds):
+    if idx + 1 == len(ebounds):
         pass
-    elif ebounds[idx+1] >= einhigh:
-        ph_matrix[i, idx] =\
-            np.min(
-                np.array(
-                    [1,
-                     (einhigh-ebounds[idx])/
-                     (einhigh-einlow)]
-                )
-            )
+    elif ebounds[idx + 1] >= einhigh:
+        ph_matrix[i, idx] = np.min(
+            np.array([1, (einhigh - ebounds[idx]) / (einhigh - einlow)])
+        )
 
     else:
-        frac = np.min(np.array([(ebounds[idx+1]-einlow)/(einhigh-einlow),
-                               (ebounds[idx+1]-ebounds[idx])/(einhigh-einlow)]))
+        frac = np.min(
+            np.array(
+                [
+                    (ebounds[idx + 1] - einlow) / (einhigh - einlow),
+                    (ebounds[idx + 1] - ebounds[idx]) / (einhigh - einlow),
+                ]
+            )
+        )
         ph_matrix[i, idx] = frac
 
-        add_frac(ph_matrix, i, idx+1, ebounds, einlow, einhigh)
+        add_frac(ph_matrix, i, idx + 1, ebounds, einlow, einhigh)
 
 
 @njit(fastmath=True)
@@ -96,12 +101,12 @@ def _get_xy_pos(azimuth, zenith, xmin, ymin, xbin, ybin):
     :returns: Grid postition (x,y)
     """
 
-    x = np.cos(azimuth)*np.cos(zenith)
-    y = np.sin(azimuth)*np.cos(zenith)
+    x = np.cos(azimuth) * np.cos(zenith)
+    y = np.sin(azimuth) * np.cos(zenith)
     z = np.sin(zenith)
 
     zenith_pointing = np.arccos(x)
-    azimuth_pointing = np.arctan2(z,y)
+    azimuth_pointing = np.arctan2(z, y)
 
     x_pos = (zenith_pointing * np.cos(azimuth_pointing) - xmin) / xbin
     y_pos = (zenith_pointing * np.sin(azimuth_pointing) - ymin) / ybin
@@ -132,7 +137,7 @@ def _prep_out_pixels(ix_left, ix_right, iy_low, iy_up):
     return out
 
 
-def multi_response_irf_read_objects(times, detector, drm='Photopeak'):
+def multi_response_irf_read_objects(times, detector, drm="Photopeak"):
     """
     TODO: This is very ugly. Come up with a better way.
     Function to initalize the needed responses for the given times.
@@ -151,16 +156,16 @@ def multi_response_irf_read_objects(times, detector, drm='Photopeak'):
             # Default latest response version
             response_versions.append(4)
 
-        elif time < Time(datetime.strptime('031206 060000', '%y%m%d %H%M%S')):
+        elif time < Time(datetime.strptime("031206 060000", "%y%m%d %H%M%S")):
             response_versions.append(0)
 
-        elif time < Time(datetime.strptime('040717 082006', '%y%m%d %H%M%S')):
+        elif time < Time(datetime.strptime("040717 082006", "%y%m%d %H%M%S")):
             response_versions.append(1)
 
-        elif time < Time(datetime.strptime('090219 095957', '%y%m%d %H%M%S')):
+        elif time < Time(datetime.strptime("090219 095957", "%y%m%d %H%M%S")):
             response_versions.append(2)
 
-        elif time < Time(datetime.strptime('100527 124500', '%y%m%d %H%M%S')):
+        elif time < Time(datetime.strptime("100527 124500", "%y%m%d %H%M%S")):
             response_versions.append(3)
 
         else:
@@ -174,22 +179,24 @@ def multi_response_irf_read_objects(times, detector, drm='Photopeak'):
             # Create this response object
             if drm == "Photopeak":
                 responses[version] = ResponseDataPhotopeak(
-                    detector=detector,
-                    version=version)
+                    detector=detector, version=version
+                )
             else:
                 responses[version] = ResponseDataRMF(version=version)
-                
+
         response_irf_read_times.append(responses[version])
     return response_irf_read_times
 
 
 class ResponseGenerator(object):
-    def __init__(self,
-                 pointing_id=None,
-                 ebounds=None,
-                 response_irf_read_object=None,
-                 det=None,
-                 sc_matrix=None):
+    def __init__(
+        self,
+        pointing_id=None,
+        ebounds=None,
+        response_irf_read_object=None,
+        det=None,
+        sc_matrix=None,
+    ):
         """
         Base Response Class - Here we have everything that stays the same for
         GRB and Constant Pointsource Reponses
@@ -206,15 +213,16 @@ class ResponseGenerator(object):
             get_files(pointing_id, access="afs")
         except AssertionError:
             # Get the files from the iSDC data archive
-            print("AFS data access did not work. "
-                  "I will try the ISDC data archive.")
+            print("AFS data access did not work. " "I will try the ISDC data archive.")
             get_files(pointing_id, access="isdc")
 
         # Read in geometry file to get sc_matrix
-        geometry_file_path = os.path.join(get_path_of_external_data_dir(),
-                                          'pointing_data',
-                                          pointing_id,
-                                          'sc_orbit_param.fits.gz')
+        geometry_file_path = os.path.join(
+            get_path_of_external_data_dir(),
+            "pointing_data",
+            pointing_id,
+            "sc_orbit_param.fits.gz",
+        )
 
         if sc_matrix is None:
             pointing_object = SPIPointing(geometry_file_path)
@@ -243,7 +251,7 @@ class ResponseGenerator(object):
             self._ene_min = ebounds[:-1]
             self._ene_max = ebounds[1:]
             self._ebounds = ebounds
-    
+
     def get_xy_pos(self, azimuth, zenith):
         """
         Get xy position (in SPI simulation) for given azimuth and zenith
@@ -254,13 +262,15 @@ class ResponseGenerator(object):
         :returns: grid position in (x,y) coordinates
         """
         # we call a numba function here to speed it up
-        return _get_xy_pos(azimuth,
-                           zenith,
-                           self.irf_ob.irf_xmin,
-                           self.irf_ob.irf_ymin,
-                           self.irf_ob.irf_xbin,
-                           self.irf_ob.irf_ybin)
-    
+        return _get_xy_pos(
+            azimuth,
+            zenith,
+            self.irf_ob.irf_xmin,
+            self.irf_ob.irf_ymin,
+            self.irf_ob.irf_xbin,
+            self.irf_ob.irf_ybin,
+        )
+
     def set_location(self, ra, dec):
         """
         Calculate the weighted irfs for the three
@@ -273,13 +283,9 @@ class ResponseGenerator(object):
         """
 
         # Transform ra, dec from icrs to spi frame
-        azimuth, zenith = transform_icrs_to_spi(ra,
-                                                 dec,
-                                                 self._sc_matrix)
+        azimuth, zenith = transform_icrs_to_spi(ra, dec, self._sc_matrix)
 
-
-        self._weighted_irfs(np.deg2rad(azimuth),
-                            np.deg2rad(zenith))
+        self._weighted_irfs(np.deg2rad(azimuth), np.deg2rad(zenith))
 
         self._recalculate_response()
 
@@ -294,14 +300,11 @@ class ResponseGenerator(object):
         :returns: ra and dec value
         """
 
-        self._weighted_irfs(np.deg2rad(azimuth),
-                            np.deg2rad(zenith))
+        self._weighted_irfs(np.deg2rad(azimuth), np.deg2rad(zenith))
 
         self._recalculate_response()
 
-        return transform_spi_to_icrs(azimuth,
-                                     zenith,
-                                     self._sc_matrix)
+        return transform_spi_to_icrs(azimuth, zenith, self._sc_matrix)
 
     def _weighted_irfs(self, azimuth, zenith):
         """
@@ -344,9 +347,9 @@ class ResponseGenerator(object):
         wgt = np.zeros(4)
 
         # Get the weights
-        if ix_left < 0.:
+        if ix_left < 0.0:
 
-            if ix_right < 0.:
+            if ix_right < 0.0:
 
                 out = _prep_out_pixels(ix_left, ix_right, iy_low, iy_up)
 
@@ -370,7 +373,7 @@ class ResponseGenerator(object):
 
         else:
 
-            wgt_left = 1. - wgt_right
+            wgt_left = 1.0 - wgt_right
 
         if iy_low < 0:
             if iy_up < 0:
@@ -397,7 +400,7 @@ class ResponseGenerator(object):
 
         else:
 
-            wgt_low = 1. - wgt_up
+            wgt_low = 1.0 - wgt_up
 
         wgt[0] = wgt_left * wgt_low
         wgt[1] = wgt_right * wgt_low
@@ -451,22 +454,23 @@ class ResponseGenerator(object):
 
         :returns: Roland
         """
-        return HTML(filename=os.path.join(
-            get_path_of_internal_data_dir(),
-            "Roland.html")
-                    )
+        return HTML(
+            filename=os.path.join(get_path_of_internal_data_dir(), "Roland.html")
+        )
 
 
 class ResponseRMFGenerator(ResponseGenerator):
 
-    def __init__(self,
-                 pointing_id=None,
-                 monte_carlo_energies=None,
-                 ebounds=None,
-                 response_irf_read_object=None,
-                 det=None,
-                 fixed_rsp_matrix=None,
-                 sc_matrix=None):
+    def __init__(
+        self,
+        pointing_id=None,
+        monte_carlo_energies=None,
+        ebounds=None,
+        response_irf_read_object=None,
+        det=None,
+        fixed_rsp_matrix=None,
+        sc_matrix=None,
+    ):
         """
         Init Response object with total RMF used
 
@@ -489,7 +493,8 @@ class ResponseRMFGenerator(ResponseGenerator):
             ebounds=ebounds,
             response_irf_read_object=response_irf_read_object,
             det=det,
-            sc_matrix=sc_matrix)
+            sc_matrix=sc_matrix,
+        )
 
         self._monte_carlo_energies = monte_carlo_energies
 
@@ -506,13 +511,15 @@ class ResponseRMFGenerator(ResponseGenerator):
         self._weighted_irf_nonph_2 = None
 
     @classmethod
-    def from_time(cls,
-                  time,
-                  det,
-                  ebounds,
-                  monte_carlo_energies,
-                  rsp_read_obj,
-                  fixed_rsp_matrix=None):
+    def from_time(
+        cls,
+        time,
+        det,
+        ebounds,
+        monte_carlo_energies,
+        rsp_read_obj,
+        fixed_rsp_matrix=None,
+    ):
         """
         Init Response object with total RMF used from a time
 
@@ -536,7 +543,7 @@ class ResponseRMFGenerator(ResponseGenerator):
             ebounds=ebounds,
             response_irf_read_object=rsp_read_obj,
             det=det,
-            fixed_rsp_matrix=fixed_rsp_matrix
+            fixed_rsp_matrix=fixed_rsp_matrix,
         )
 
     def _rebin_rmfs(self):
@@ -547,74 +554,74 @@ class ResponseRMFGenerator(ResponseGenerator):
         :returns:
         """
         # Number of ebins on input and output side
-        N_ebins = len(self.ebounds)-1
+        N_ebins = len(self.ebounds) - 1
         N_monte_carlo = len(self.monte_carlo_energies)
 
         # get the interpolation grid (ein and the log mean of the eout_bins)
-        log_eout_mean = 10**((np.log10(self.ebounds[:-1]) +
-                              np.log10(self.ebounds[1:])) / 2.0)
+        log_eout_mean = 10 ** (
+            (np.log10(self.ebounds[:-1]) + np.log10(self.ebounds[1:])) / 2.0
+        )
         eout_width = self.ebounds[1:] - self.ebounds[:-1]
-        xx, yy = np.meshgrid(self.monte_carlo_energies,
-                             log_eout_mean)
+        xx, yy = np.meshgrid(self.monte_carlo_energies, log_eout_mean)
         points = np.array((xx.ravel(), yy.ravel())).T
 
         # build the interpolation functions for rmf_2 mat and rmf_3 mat
         base_ebounds = self.irf_ob.ebounds_rmf_2_base
-        base_ebounds_width = base_ebounds[1:]-base_ebounds[:-1]
+        base_ebounds_width = base_ebounds[1:] - base_ebounds[:-1]
 
         x_base = self.irf_ob.energies_database
-        y_base = 10**((np.log10(base_ebounds[:-1])+
-                       np.log10(base_ebounds[1:]))/2.0)
+        y_base = 10 ** (
+            (np.log10(base_ebounds[:-1]) + np.log10(base_ebounds[1:])) / 2.0
+        )
 
-        lin_int_rmf2 =\
-            interpolate.RegularGridInterpolator((x_base, y_base),
-                                                self.irf_ob.rmf_2_base /
-                                                base_ebounds_width,
-                                                bounds_error=False,
-                                                fill_value=0)
+        lin_int_rmf2 = interpolate.RegularGridInterpolator(
+            (x_base, y_base),
+            self.irf_ob.rmf_2_base / base_ebounds_width,
+            bounds_error=False,
+            fill_value=0,
+        )
 
-        lin_int_rmf3 =\
-            interpolate.RegularGridInterpolator((x_base, y_base),
-                                                self.irf_ob.rmf_3_base /
-                                                base_ebounds_width,
-                                                bounds_error=False,
-                                                fill_value=0)
+        lin_int_rmf3 = interpolate.RegularGridInterpolator(
+            (x_base, y_base),
+            self.irf_ob.rmf_3_base / base_ebounds_width,
+            bounds_error=False,
+            fill_value=0,
+        )
 
         # call the interpolation and create the correct matrix shape
-        mat2inter = (lin_int_rmf2(points).reshape(N_ebins, N_monte_carlo).T)
+        mat2inter = lin_int_rmf2(points).reshape(N_ebins, N_monte_carlo).T
 
-        mat3inter = (lin_int_rmf3(points).reshape(N_ebins, N_monte_carlo).T)
+        mat3inter = lin_int_rmf3(points).reshape(N_ebins, N_monte_carlo).T
 
         # trapz integrate over out bins
 
-        self._mat2inter = 0.5*(mat2inter[1:]+mat2inter[:-1])*eout_width
-        self._mat3inter = 0.5*(mat3inter[1:]+mat3inter[:-1])*eout_width
+        self._mat2inter = 0.5 * (mat2inter[1:] + mat2inter[:-1]) * eout_width
+        self._mat3inter = 0.5 * (mat3inter[1:] + mat3inter[:-1]) * eout_width
 
         # normalize the rows - This was BS
 
-        #norm_fact = np.sum(self._mat2inter, axis=1)
+        # norm_fact = np.sum(self._mat2inter, axis=1)
 
         # Normalize this - is this correct?
-        #self._mat2inter[norm_fact>0] /= norm_fact[norm_fact>0][:, np.newaxis]
-        #self._mat2inter[norm_fact<=0] = 0
+        # self._mat2inter[norm_fact>0] /= norm_fact[norm_fact>0][:, np.newaxis]
+        # self._mat2inter[norm_fact<=0] = 0
 
-        #norm_fact = np.sum(self._mat3inter, axis=1)
+        # norm_fact = np.sum(self._mat3inter, axis=1)
 
         # Normalize this - is this correct?
-        #self._mat3inter[norm_fact>0] /= norm_fact[norm_fact>0][:, np.newaxis]
-        #self._mat3inter[norm_fact<=0] = 0
+        # self._mat3inter[norm_fact>0] /= norm_fact[norm_fact>0][:, np.newaxis]
+        # self._mat3inter[norm_fact<=0] = 0
 
-        self._ph_matrix = np.zeros((N_monte_carlo-1,
-                                    N_ebins))
+        self._ph_matrix = np.zeros((N_monte_carlo - 1, N_ebins))
 
-        for i, (einlow, einhigh) in \
-            enumerate(zip(self.monte_carlo_energies[:-1],
-                          self.monte_carlo_energies[1:])):
+        for i, (einlow, einhigh) in enumerate(
+            zip(self.monte_carlo_energies[:-1], self.monte_carlo_energies[1:])
+        ):
             if (not einhigh < self.ebounds[0]) and (not einlow > self.ebounds[-1]):
                 # find id and fraction
-                idx = np.argwhere(self.ebounds > einlow)[0, 0]-1
-                if idx==-1:
-                    idx=0
+                idx = np.argwhere(self.ebounds > einlow)[0, 0] - 1
+                if idx == -1:
+                    idx = 0
                 add_frac(self._ph_matrix, i, idx, self.ebounds, einlow, einhigh)
 
     def _weighted_irfs(self, azimuth, zenith):
@@ -633,24 +640,29 @@ class ResponseRMFGenerator(ResponseGenerator):
         # compute the weights between the grids
         wgt, xx, yy = self._get_irf_weights(x, y)
 
-
         # If outside of the response pattern set response to zero
         try:
             # select these points on the grid and weight them together
-            self._weighted_irf_ph = \
-                self.irf_ob.irfs_photopeak[:, self._det, xx, yy].dot(wgt)
-            self._weighted_irf_nonph_1 = \
-                self.irf_ob.irfs_nonphoto_1[:, self._det, xx, yy].dot(wgt)
-            self._weighted_irf_nonph_2 = \
-                self.irf_ob.irfs_nonphoto_2[:, self._det, xx, yy].dot(wgt)
+            self._weighted_irf_ph = self.irf_ob.irfs_photopeak[
+                :, self._det, xx, yy
+            ].dot(wgt)
+            self._weighted_irf_nonph_1 = self.irf_ob.irfs_nonphoto_1[
+                :, self._det, xx, yy
+            ].dot(wgt)
+            self._weighted_irf_nonph_2 = self.irf_ob.irfs_nonphoto_2[
+                :, self._det, xx, yy
+            ].dot(wgt)
         except IndexError:
             print("Position outside of SPI FOV!")
-            self._weighted_irf_ph =\
-                np.zeros_like(self.irf_ob.irfs_photopeak[:, self._det, 20, 20])
-            self._weighted_irf_nonph_1\
-                = np.zeros_like(self.irf_ob.irfs_nonphoto_1[:, self._det, 20, 20])
-            self._weighted_irf_nonph_2\
-                = np.zeros_like(self.irf_ob.irfs_nonphoto_2[:, self._det, 20, 20])
+            self._weighted_irf_ph = np.zeros_like(
+                self.irf_ob.irfs_photopeak[:, self._det, 20, 20]
+            )
+            self._weighted_irf_nonph_1 = np.zeros_like(
+                self.irf_ob.irfs_nonphoto_1[:, self._det, 20, 20]
+            )
+            self._weighted_irf_nonph_2 = np.zeros_like(
+                self.irf_ob.irfs_nonphoto_2[:, self._det, 20, 20]
+            )
 
     def _recalculate_response(self):
         """
@@ -661,34 +673,44 @@ class ResponseRMFGenerator(ResponseGenerator):
         if self._given_rsp_mat:
             self._matrix = self._rsp_matrix
         else:
-            ein_bins = np.empty((len(self._monte_carlo_energies)-1, 2))
+            ein_bins = np.empty((len(self._monte_carlo_energies) - 1, 2))
 
             ein_bins[:, 0] = self._monte_carlo_energies[:-1]
             ein_bins[:, 1] = self._monte_carlo_energies[1:]
 
-            monte_carlo_log_mean = 10**((
-                np.log10(self._monte_carlo_energies[1:]) +
-                np.log10(self._monte_carlo_energies[:-1]))/2.0)
+            monte_carlo_log_mean = 10 ** (
+                (
+                    np.log10(self._monte_carlo_energies[1:])
+                    + np.log10(self._monte_carlo_energies[:-1])
+                )
+                / 2.0
+            )
 
-            interph = log_interp1d(monte_carlo_log_mean,
-                                   self.irf_ob.energies_database,
-                                   self._weighted_irf_ph)
-            inter2 = log_interp1d(monte_carlo_log_mean,
-                                  self.irf_ob.energies_database,
-                                  self._weighted_irf_nonph_1)
-            inter3 = log_interp1d(monte_carlo_log_mean,
-                                  self.irf_ob.energies_database,
-                                  self._weighted_irf_nonph_2)
+            interph = log_interp1d(
+                monte_carlo_log_mean,
+                self.irf_ob.energies_database,
+                self._weighted_irf_ph,
+            )
+            inter2 = log_interp1d(
+                monte_carlo_log_mean,
+                self.irf_ob.energies_database,
+                self._weighted_irf_nonph_1,
+            )
+            inter3 = log_interp1d(
+                monte_carlo_log_mean,
+                self.irf_ob.energies_database,
+                self._weighted_irf_nonph_2,
+            )
 
             # TODO clean up these .T calls and maybe change
             # the trapz to logmean
 
-            mat1 = (inter2*self._mat2inter.T).T
-            mat2 = (inter3*self._mat3inter.T).T
+            mat1 = (inter2 * self._mat2inter.T).T
+            mat2 = (inter3 * self._mat3inter.T).T
 
             # Add photopeak to the ebin with the photon energy within
             # its bounds
-            self._transpose_matrix = mat1+mat2+(interph*self._ph_matrix.T).T
+            self._transpose_matrix = mat1 + mat2 + (interph * self._ph_matrix.T).T
 
             self._matrix = self._transpose_matrix.T
 
@@ -705,7 +727,7 @@ class ResponseRMFGenerator(ResponseGenerator):
             response_irf_read_object=self.irf_ob,
             det=copy.deepcopy(self.det),
             fixed_rsp_matrix=copy.deepcopy(self._rsp_matrix),
-            sc_matrix=self._sc_matrix
+            sc_matrix=self._sc_matrix,
         )
 
     @property
@@ -732,11 +754,9 @@ class ResponseRMFGenerator(ResponseGenerator):
 
 class ResponsePhotopeakGenerator(ResponseGenerator):
 
-    def __init__(self,
-                 pointing_id=None,
-                 ebounds=None,
-                 response_irf_read_object=None,
-                 det=None):
+    def __init__(
+        self, pointing_id=None, ebounds=None, response_irf_read_object=None, det=None
+    ):
         """
         Init Response object with photopeak only
 
@@ -751,10 +771,8 @@ class ResponsePhotopeakGenerator(ResponseGenerator):
 
         # call init of base class
         super(ResponsePhotopeakGenerator, self).__init__(
-            pointing_id,
-            ebounds,
-            response_irf_read_object,
-            det)
+            pointing_id, ebounds, response_irf_read_object, det
+        )
 
         self._effective_area = None
         self._weighted_irf_ph = None
@@ -779,12 +797,14 @@ class ResponsePhotopeakGenerator(ResponseGenerator):
         # If outside of the response pattern set response to zero
         try:
             # select these points on the grid and weight them together
-            self._weighted_irf_ph = \
-                self.irf_ob.irfs_photopeak[:,self._det, xx, yy].dot(wgt)
+            self._weighted_irf_ph = self.irf_ob.irfs_photopeak[
+                :, self._det, xx, yy
+            ].dot(wgt)
 
         except IndexError:
-            self._weighted_irf_ph =\
-                np.zeros_like(self.irf_ob.irfs_photopeak[:, self._det, 20, 20])
+            self._weighted_irf_ph = np.zeros_like(
+                self.irf_ob.irfs_photopeak[:, self._det, 20, 20]
+            )
 
     def _recalculate_response(self):
         """
@@ -794,30 +814,31 @@ class ResponsePhotopeakGenerator(ResponseGenerator):
 
         :returns: Full DRM
         """
-        #n_energy_bins = len(self._ebounds) - 1
-        
+        # n_energy_bins = len(self._ebounds) - 1
+
         ebins = np.empty((len(self._ene_min), 2))
         eff_area = np.empty_like(ebins)
 
         ebins[:, 0] = self._ene_min
         ebins[:, 1] = self._ene_max
-        
-        inter = log_interp1d(self.ebounds,
-                             self.irf_ob.energies_database,
-                             self._weighted_irf_ph)
-        
+
+        inter = log_interp1d(
+            self.ebounds, self.irf_ob.energies_database, self._weighted_irf_ph
+        )
+
         eff_area[:, 0] = inter[:-1]
         eff_area[:, 1] = inter[1:]
-        
-        self._effective_area = trapz(eff_area, ebins)/(self._ene_max -
-                                                       self._ene_min)
+
+        self._effective_area = trapz(eff_area, ebins) / (self._ene_max - self._ene_min)
 
     @classmethod
-    def from_time(cls,
-                  time,
-                  det,
-                  ebounds,
-                  rsp_read_obj,):
+    def from_time(
+        cls,
+        time,
+        det,
+        ebounds,
+        rsp_read_obj,
+    ):
         """
         Init Response object with photopeak only
 

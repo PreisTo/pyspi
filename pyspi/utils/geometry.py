@@ -1,6 +1,7 @@
 import numpy as np
 from numba import njit
 
+
 @njit
 def polar2cart(ra, dec):
     """
@@ -15,7 +16,7 @@ def polar2cart(ra, dec):
     y = np.sin(np.deg2rad(ra)) * np.cos(np.deg2rad(dec))
     z = np.sin(np.deg2rad(dec))
 
-    return np.array([x,y,z])
+    return np.array([x, y, z])
 
 
 @njit

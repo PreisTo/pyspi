@@ -1,16 +1,11 @@
 import collections
-from typing import Optional, Dict, Union
+from typing import Dict, Optional, Union
+
 import numpy as np
-
-from astromodels import Parameter, Model
+from astromodels import Model, Parameter
 from astromodels.functions.priors import Cosine_Prior, Uniform_prior
-
-from threeML import PluginPrototype
-from threeML.io.file_utils import sanitize_filename
-from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
-from threeML.plugins.SpectrumLike import SpectrumLike
 from threeML.io.logging import setup_logger
-
+from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
 
 from pyspi.utils.response.spi_drm import SPIDRM
 
@@ -21,15 +16,16 @@ class SPILike(DispersionSpectrumLike):
     """
     Plugin for the data of SPI, based on PySPI
     """
+
     def __init__(
-            self,
-            name: str,
-            observation,
-            background,
-            bkg_base_array,
-            free_position: bool,
-            verbose: bool = True,
-            **kwargs
+        self,
+        name: str,
+        observation,
+        background,
+        bkg_base_array,
+        free_position: bool,
+        verbose: bool = True,
+        **kwargs,
     ):
         """
         Init the plugin for a constant source analysis with PySPI
@@ -45,20 +41,13 @@ class SPILike(DispersionSpectrumLike):
         """
         self._free_position: bool = free_position
 
-        if not isinstance(
-                observation.response, SPIDRM
-        ):
+        if not isinstance(observation.response, SPIDRM):
 
-            log.error("The response associated with the observation"
-                      " is not a SPIDRM")
+            log.error("The response associated with the observation" " is not a SPIDRM")
 
             raise AssertionError()
 
-        super(SPILike, self).__init__(name,
-                                      observation,
-                                      background,
-                                      verbose,
-                                      **kwargs)
+        super(SPILike, self).__init__(name, observation, background, verbose, **kwargs)
 
         self._bkg_base_array = bkg_base_array
         self._bkg_array = np.ones(len(self._bkg_base_array))
@@ -76,16 +65,18 @@ class SPILike(DispersionSpectrumLike):
 
         if self._free_position:
             log.info(f"Freeing the position of {self.name} and setting priors")
-            
+
             for key in self._like_model.point_sources.keys():
 
                 self._like_model.point_sources[key].position.ra.free = True
                 self._like_model.point_sources[key].position.dec.free = True
 
-                self._like_model.point_sources[key].position.ra.prior = \
-                    Uniform_prior(lower_bound=0.0, upper_bound=360)
-                self._like_model.point_sources[key].position.dec.prior = \
-                    Cosine_Prior(lower_bound=-90.0, upper_bound=90)
+                self._like_model.point_sources[key].position.ra.prior = Uniform_prior(
+                    lower_bound=0.0, upper_bound=360
+                )
+                self._like_model.point_sources[key].position.dec.prior = Cosine_Prior(
+                    lower_bound=-90.0, upper_bound=90
+                )
 
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
@@ -107,11 +98,10 @@ class SPILike(DispersionSpectrumLike):
         :returns: model counts
         """
 
-        source = super(SPILike, self)._evaluate_model(precalc_fluxes=
-                                                      precalc_fluxes)
+        source = super(SPILike, self)._evaluate_model(precalc_fluxes=precalc_fluxes)
         self._update_bkg_array()
-        bkg = self._bkg_array*self._bkg_base_array
-        return source+bkg
+        bkg = self._bkg_array * self._bkg_base_array
+        return source + bkg
 
     def get_model(self, precalc_fluxes: Optional[np.ndarray] = None) -> np.ndarray:
         """
@@ -139,7 +129,7 @@ class SPILike(DispersionSpectrumLike):
 
         :returns:
         """
-        
+
         self._bkg_parameters = bkg_parameters
         for parameter in bkg_parameters:
             self.nuisance_parameters[parameter.name] = parameter
@@ -151,7 +141,7 @@ class SPILike(DispersionSpectrumLike):
 
         :returns:
         """
-        
+
         for key in self._like_model.parameters.keys():
             if "bkg" in key:
                 idx = int(key.split("_")[-1])
@@ -168,12 +158,7 @@ class SPILike(DispersionSpectrumLike):
         self._free_position = flag
 
     @classmethod
-    def from_spectrumlike(
-        cls,
-        spectrum_like,
-        bkg_base_array,
-        free_position=False
-    ):
+    def from_spectrumlike(cls, spectrum_like, bkg_base_array, free_position=False):
         """
         Generate SPILikeGRB from an existing SpectrumLike child
 
@@ -197,14 +182,15 @@ class SPILikeGRB(DispersionSpectrumLike):
     """
     Plugin for the data of SPI, based on PySPI
     """
+
     def __init__(
-            self,
-            name,
-            observation,
-            background=None,
-            free_position=False,
-            verbose=True,
-            **kwargs
+        self,
+        name,
+        observation,
+        background=None,
+        free_position=False,
+        verbose=True,
+        **kwargs,
     ):
         """
         Init the plugin for a GRB analysis with PySPI
@@ -219,14 +205,12 @@ class SPILikeGRB(DispersionSpectrumLike):
         self._free_position = free_position
 
         assert isinstance(
-                observation.response, SPIDRM
-            ), "The response associated with the observation is not a SPIDRM"
+            observation.response, SPIDRM
+        ), "The response associated with the observation is not a SPIDRM"
 
-        super(SPILikeGRB, self).__init__(name,
-                                         observation,
-                                         background,
-                                         verbose,
-                                         **kwargs)
+        super(SPILikeGRB, self).__init__(
+            name, observation, background, verbose, **kwargs
+        )
 
         self._psd_eff: Parameter = Parameter(
             "psd_eff_%s" % name,
@@ -247,23 +231,27 @@ class SPILikeGRB(DispersionSpectrumLike):
 
         self.update_nuisance_parameters(new_nuisance_parameters)
 
-
-    def use_psd_eff_correction(self,
-                               min_value: Union[int, float] = 0.5,
-                               max_value: Union[int, float] = 1) -> None:
+    def use_psd_eff_correction(
+        self, min_value: Union[int, float] = 0.5, max_value: Union[int, float] = 1
+    ) -> None:
         """
-        Activate the use of the effective area correction, which is a multiplicative factor in front of the model which
-        might be used to mitigate the effect of intercalibration mismatch between different instruments.
-        NOTE: do not use this is you are using only one detector, as the multiplicative constant will be completely
-        degenerate with the normalization of the model.
-        NOTE2: always keep at least one multiplicative constant fixed to one (its default value), when using this
-        with other OGIPLike-type detectors
-        :param min_value: minimum allowed value (default: 0.8, corresponding to a 20% - effect)
-        :param max_value: maximum allowed value (default: 1.2, corresponding to a 20% + effect
+        Activate the use of the effective area correction, which is a multiplicative
+        factor in front of the model which might be used to mitigate the effect of
+        intercalibration mismatch between different instruments.
+        NOTE: do not use this is you are using only one detector, as the multiplicative
+        constant will be completely degenerate with the normalization of the model.
+        NOTE2: always keep at least one multiplicative constant fixed to one (its
+        default value), when using this with other OGIPLike-type detectors
+        :param min_value: minimum allowed value (default: 0.8, corresponding to a 20%
+                                                 - effect)
+        :param max_value: maximum allowed value (default: 1.2, corresponding to a 20%
+                                                 + effect
         :return:
         """
         log.info(
-            f"{self._name} is using psd efficiensy (between {min_value} and {max_value})")
+            f"{self._name} is using psd efficiensy (between {min_value} and"
+            f" {max_value})"
+        )
         self._psd_eff.free = True
         self._psd_eff.bounds = (min_value, max_value)
 
@@ -271,17 +259,16 @@ class SPILikeGRB(DispersionSpectrumLike):
 
         self._psd_eff.set_uninformative_prior(Uniform_prior)
 
-    def fix_psd_eff_correction(self,
-                               value: Union[int, float] = 1) -> None:
+    def fix_psd_eff_correction(self, value: Union[int, float] = 1) -> None:
         """
-        Fix the multiplicative factor (see use_effective_area_correction) to the provided value (default: 1)
+        Fix the multiplicative factor (see use_effective_area_correction) to the
+                                                 provided value (default: 1)
         :param value: new value (default: 1, i.e., no correction)
         :return:
         """
 
         self._psd_eff.value = value
         self._psd_eff.fix = True
-
 
     def set_model(self, likelihood_model):
         """
@@ -300,10 +287,12 @@ class SPILikeGRB(DispersionSpectrumLike):
                 self._like_model.point_sources[key].position.ra.free = True
                 self._like_model.point_sources[key].position.dec.free = True
 
-                self._like_model.point_sources[key].position.ra.prior = \
-                    Uniform_prior(lower_bound=0.0, upper_bound=360)
-                self._like_model.point_sources[key].position.dec.prior = \
-                    Cosine_Prior(lower_bound=-90.0, upper_bound=90)
+                self._like_model.point_sources[key].position.ra.prior = Uniform_prior(
+                    lower_bound=0.0, upper_bound=360
+                )
+                self._like_model.point_sources[key].position.dec.prior = Cosine_Prior(
+                    lower_bound=-90.0, upper_bound=90
+                )
 
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
@@ -334,15 +323,15 @@ class SPILikeGRB(DispersionSpectrumLike):
 
         return super(SPILikeGRB, self).get_model(precalc_fluxes=precalc_fluxes)
 
-    def _evaluate_model(
-        self, precalc_fluxes: Optional[np.array] = None
-    ) -> np.ndarray:
+    def _evaluate_model(self, precalc_fluxes: Optional[np.array] = None) -> np.ndarray:
         """
         evaluates the full model over all channels
         :return:
         """
 
-        return self._response.convolve(precalc_fluxes=precalc_fluxes)*self._psd_eff.value
+        return (
+            self._response.convolve(precalc_fluxes=precalc_fluxes) * self._psd_eff.value
+        )
 
     def set_free_position(self, flag):
         """
@@ -355,9 +344,7 @@ class SPILikeGRB(DispersionSpectrumLike):
         self._free_position = flag
 
     @classmethod
-    def from_spectrumlike(
-            cls, spectrum_like, free_position=False
-    ):
+    def from_spectrumlike(cls, spectrum_like, free_position=False):
         """
         Generate SPILikeGRB from an existing SpectrumLike child
 

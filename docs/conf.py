@@ -38,8 +38,8 @@ def run_apidoc(app):
     better_apidoc.main(
         [
             "better-apidoc",
-            #"-t",
-            #str(DOCS / "_templates"),
+            # "-t",
+            # str(DOCS / "_templates"),
             "--force",
             "--no-toc",
             "--separate",
@@ -184,8 +184,8 @@ latex_documents = [
     (
         master_doc,
         "PySpi.tex",
-        u"PySpi Documentation",
-        u"Bjoern Biltzinger,  Dr. J. Michael Burgess & Thomas Siegert",
+        "PySpi Documentation",
+        "Bjoern Biltzinger,  Dr. J. Michael Burgess & Thomas Siegert",
         "manual",
     ),
 ]
@@ -194,7 +194,7 @@ latex_documents = [
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "PySpi", u"PySpi Documentation", [author], 1)]
+man_pages = [(master_doc, "PySpi", "PySpi Documentation", [author], 1)]
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -205,7 +205,7 @@ texinfo_documents = [
     (
         master_doc,
         "PySpi",
-        u"PySpi Documentation",
+        "PySpi Documentation",
         author,
         "PySpi",
         "One line description of project.",

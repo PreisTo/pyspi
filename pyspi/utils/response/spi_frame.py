@@ -1,77 +1,84 @@
 import astropy.coordinates as coord
 import astropy.units as u
 import numpy as np
+from astropy.coordinates import (
+    Attribute,
+    BaseCoordinateFrame,
+    RepresentationMapping,
+    frame_transform_graph,
+    spherical_to_cartesian,
+)
 from numba import njit
-from astropy.coordinates import (BaseCoordinateFrame,
-                                 Attribute,
-                                 RepresentationMapping,
-                                 frame_transform_graph,
-                                 spherical_to_cartesian)
 
-from pyspi.utils.response.spi_pointing import construct_sc_matrix
 from pyspi.utils.geometry import cart2polar, polar2cart
+from pyspi.utils.response.spi_pointing import construct_sc_matrix
+
 
 class SPIFrame(BaseCoordinateFrame):
     """
-    
+
     INTEGRAL SPI Frame
     Parameters
     ----------
     representation : `BaseRepresentation` or None
         A representation object or None to have no data (or use the other keywords)
-  
+
     """
+
     default_representation = coord.SphericalRepresentation
 
     frame_specific_representation_info = {
-        'spherical': [
+        "spherical": [
             RepresentationMapping(
-                reprname='lon', framename='lon', defaultunit=u.degree),
+                reprname="lon", framename="lon", defaultunit=u.degree
+            ),
             RepresentationMapping(
-                reprname='lat', framename='lat', defaultunit=u.degree),
+                reprname="lat", framename="lat", defaultunit=u.degree
+            ),
             RepresentationMapping(
-                reprname='distance', framename='DIST', defaultunit=None)
+                reprname="distance", framename="DIST", defaultunit=None
+            ),
         ],
-        'unitspherical': [
+        "unitspherical": [
             RepresentationMapping(
-                reprname='lon', framename='lon', defaultunit=u.degree),
+                reprname="lon", framename="lon", defaultunit=u.degree
+            ),
             RepresentationMapping(
-                reprname='lat', framename='lat', defaultunit=u.degree)
+                reprname="lat", framename="lat", defaultunit=u.degree
+            ),
         ],
-        'cartesian': [
-            RepresentationMapping(
-                reprname='x', framename='SCX'), RepresentationMapping(
-                reprname='y', framename='SCY'), RepresentationMapping(
-                reprname='z', framename='SCZ')
-        ]
+        "cartesian": [
+            RepresentationMapping(reprname="x", framename="SCX"),
+            RepresentationMapping(reprname="y", framename="SCY"),
+            RepresentationMapping(reprname="z", framename="SCZ"),
+        ],
     }
 
     # Specify frame attributes required to fully specify the frame
     scx_ra = Attribute(default=None)
     scx_dec = Attribute(default=None)
-    
+
     scy_ra = Attribute(default=None)
     scy_dec = Attribute(default=None)
-    
+
     scz_ra = Attribute(default=None)
     scz_dec = Attribute(default=None)
-   
-
-
 
 
 @frame_transform_graph.transform(coord.FunctionTransform, SPIFrame, coord.ICRS)
 def spi_to_j2000(spi_coord, j2000_frame):
-    """ 
+    """
     Transform spi fram to ICRS frame
     """
 
-    sc_matrix = construct_sc_matrix(spi_coord.scx_ra,
-                                    spi_coord.scx_dec,
-                                    spi_coord.scy_ra,
-                                    spi_coord.scy_dec,
-                                    spi_coord.scz_ra,
-                                    spi_coord.scz_dec)
+    sc_matrix = construct_sc_matrix(
+        spi_coord.scx_ra,
+        spi_coord.scx_dec,
+        spi_coord.scy_ra,
+        spi_coord.scy_dec,
+        spi_coord.scz_ra,
+        spi_coord.scz_dec,
+    )
 
     # X,Y,Z = gbm_coord.cartesian
 
@@ -79,11 +86,11 @@ def spi_to_j2000(spi_coord, j2000_frame):
 
     X0 = np.dot(sc_matrix[:, 0], pos)
     X1 = np.dot(sc_matrix[:, 1], pos)
-    X2 = np.clip(np.dot(sc_matrix[:, 2], pos), -1., 1.)
+    X2 = np.clip(np.dot(sc_matrix[:, 2], pos), -1.0, 1.0)
 
-    dec = np.pi / 2. - np.arccos(X2)# np.arcsin(X2)
+    dec = np.pi / 2.0 - np.arccos(X2)  # np.arcsin(X2)
 
-    idx = np.logical_and(np.abs(X0) < 1E-6, np.abs(X1) < 1E-6)
+    idx = np.logical_and(np.abs(X0) < 1e-6, np.abs(X1) < 1e-6)
 
     ra = np.zeros_like(dec)
 
@@ -94,17 +101,18 @@ def spi_to_j2000(spi_coord, j2000_frame):
 
 @frame_transform_graph.transform(coord.FunctionTransform, coord.ICRS, SPIFrame)
 def j2000_to_spi(j2000_frame, spi_coord):
-    """ 
+    """
     Transform icrs frame to SPI frame
     """
 
-    sc_matrix = construct_sc_matrix(spi_coord.scx_ra,
-                                    spi_coord.scx_dec,
-                                    spi_coord.scy_ra,
-                                    spi_coord.scy_dec,
-                                    spi_coord.scz_ra,
-                                    spi_coord.scz_dec)
-  
+    sc_matrix = construct_sc_matrix(
+        spi_coord.scx_ra,
+        spi_coord.scx_dec,
+        spi_coord.scy_ra,
+        spi_coord.scy_dec,
+        spi_coord.scz_ra,
+        spi_coord.scz_dec,
+    )
 
     pos = j2000_frame.cartesian.xyz.value
 
@@ -112,9 +120,9 @@ def j2000_to_spi(j2000_frame, spi_coord):
     X1 = np.dot(sc_matrix[1, :], pos)
     X2 = np.dot(sc_matrix[2, :], pos)
 
-    lat = np.pi / 2. - np.arccos(X2)  # convert to proper frame
+    lat = np.pi / 2.0 - np.arccos(X2)  # convert to proper frame
 
-    idx = np.logical_and(np.abs(X0) < 1E-6, np.abs(X1) < 1E-6)
+    idx = np.logical_and(np.abs(X0) < 1e-6, np.abs(X1) < 1e-6)
 
     lon = np.zeros_like(lat)
 
@@ -128,9 +136,9 @@ def j2000_to_spi(j2000_frame, spi_coord):
         scy_ra=spi_coord.scy_ra,
         scy_dec=spi_coord.scy_dec,
         scz_ra=spi_coord.scz_ra,
-        scz_dec=spi_coord.scz_dec
-
+        scz_dec=spi_coord.scz_dec,
     )
+
 
 # Functions to do the coordinate transformation fast! But has none
 # of the astropy benefits.
@@ -153,6 +161,7 @@ def transform_icrs_to_spi(ra_icrs, dec_icrs, sc_matrix):
     if lon < 0:
         lon += 360
     return lon, lat
+
 
 @njit
 def transform_spi_to_icrs(az_spi, zen_spi, sc_matrix):
