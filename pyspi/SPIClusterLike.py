@@ -12,8 +12,6 @@ from pyspi.utils.cluster_fit_core import (
 )
 
 
-
-
 class SPIClusterPlugin(PluginPrototype):
     def __init__(
         self,
@@ -37,11 +35,11 @@ class SPIClusterPlugin(PluginPrototype):
         self._exc_counts = {}
         self._prepare_fit_data()
 
-
     def set_model(self, likelihood_model_instance):
         self._source_model = likelihood_model_instance
         self._find_updatable_sources()
         self._initialize_resp_mats()
+
     def get_log_like(self):
         self._n_calls += 1
         num_sources = len(self._source_model.sources)
@@ -58,7 +56,6 @@ class SPIClusterPlugin(PluginPrototype):
             if 1 in self._updatable_sources:
                 self._update_resp_mats()
 
-
             logL = logLcore(
                 spec_binned,
                 self._pointings,
@@ -74,12 +71,10 @@ class SPIClusterPlugin(PluginPrototype):
             self._n_success += 1
             return logL
 
-
         except Exception as e:
             key = f"{type(e).__name__}: {e}"
             self._exc_counts[key] = self._exc_counts.get(key, 0) + 1
             return -1e10
-
 
     def report_call_tally(self):
         print("\n" + "=" * 70)
@@ -93,14 +88,15 @@ class SPIClusterPlugin(PluginPrototype):
             for msg, count in sorted(self._exc_counts.items(), key=lambda kv: -kv[1]):
                 print(f"    {count:>5}x  {msg}")
         if self._n_calls and self._n_success == 0:
-            print("  !!! WARNING: ZERO successful calls -- this fit's "
-                  "result is meaningless (pure prior), not a real "
-                  "measurement. Do not trust it.")
+            print(
+                "  !!! WARNING: ZERO successful calls -- this fit's "
+                "result is meaningless (pure prior), not a real "
+                "measurement. Do not trust it."
+            )
         print("=" * 70 + "\n")
 
     def inner_fit(self):
         return self.get_log_like()
-
 
     def _prepare_fit_data(self):
         ebs, counts, dets, t_elapsed, t_start = [], [], [], [], []
@@ -131,22 +127,19 @@ class SPIClusterPlugin(PluginPrototype):
                     )
             eb, c = self._binning_func(energy_bins_0, c_counts_f, self._energy_range)
             nd = len(dets_0)
-            counts.append(tuple(c[i * nd:(i + 1) * nd] for i in range(len(combination))))
+            counts.append(
+                tuple(c[i * nd : (i + 1) * nd] for i in range(len(combination)))
+            )
             ebs.append(eb)
             t_start.append(tuple(c_time_start))
             dets.append(dets_0)
             t_elapsed.append(tuple(c_time_elapsed))
-
-
 
         self._ebs = tuple(ebs)
         self._counts = tuple(counts)
         self._dets = tuple(dets)
         self._t_elapsed = tuple(t_elapsed)
         self._t_start = tuple(t_start)
-
-
-
 
     def _initialize_resp_mats(self):
         resp_mats, rmfs = [], []
@@ -161,7 +154,9 @@ class SPIClusterPlugin(PluginPrototype):
                     version = find_response_version(time)
                     rsp_base = rsp_bases[version]
                     pointing_rmfs = tuple(
-                        ResponseRMFGenerator.from_time(time, d, ebs, self._emod, rsp_base)
+                        ResponseRMFGenerator.from_time(
+                            time, d, ebs, self._emod, rsp_base
+                        )
                         for d in dets
                     )
                     combination_resp_mats.append(
@@ -182,23 +177,21 @@ class SPIClusterPlugin(PluginPrototype):
         if 1 in self._updatable_sources:
             self._updatable_rmfs = tuple(rmfs)
 
-
-
     def _update_resp_mats(self):
         for count, combination in enumerate(self._pointings):
             for source_num, source in enumerate(self._source_model.sources.values()):
                 if self._updatable_sources[source_num] == 1:
                     for pointing in range(len(combination)):
-                        self._resp_mats[count][source_num][pointing][:, :, :] = generate_resp_mat(
-                            self._updatable_rmfs[count][pointing],
-                            len(self._dets[count]),
-                            len(self._ebs[count]),
-                            len(self._emod),
-                            source.position.get_ra(),
-                            source.position.get_dec(),
+                        self._resp_mats[count][source_num][pointing][:, :, :] = (
+                            generate_resp_mat(
+                                self._updatable_rmfs[count][pointing],
+                                len(self._dets[count]),
+                                len(self._ebs[count]),
+                                len(self._emod),
+                                source.position.get_ra(),
+                                source.position.get_dec(),
+                            )
                         )
-
-
 
     def _find_updatable_sources(self):
         keywords = ["position"]
@@ -207,5 +200,5 @@ class SPIClusterPlugin(PluginPrototype):
             for parameter in source.free_parameters.values():
                 first_pos = parameter.path.find(".")
                 second_pos = parameter.path.find(".", first_pos + 1)
-                if parameter.path[first_pos + 1:second_pos] in keywords:
+                if parameter.path[first_pos + 1 : second_pos] in keywords:
                     self._updatable_sources[s_i] = 1
