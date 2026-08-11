@@ -478,41 +478,13 @@ class Region:
         else:
             self.recluster_pointings(recluster_indices, c1)
 
-        # print()
-        # print("Done!")
-        # print()
-        # for key, value in self.clusters.items():
-        #     for c in value:
-        #         print(f"{c.indices}, {c.avg_distance}")
-        # print()
-        # for key, value in self.potential_clusters1.items():
-        #     for c in value:
-        #         print(f"{c.indices}, {c.avg_distance}")
-        # print()
-        # for key, value in self.potential_clusters2.items():
-        #     for c in value:
-        #         print(f"{c.indices}, {c.avg_distance}")
-        # print(f"Comparison: {self.calc_clustering_cost(self.potential_clusters1)}, {self.calc_clustering_cost(self.potential_clusters2)}")
-
         if self.calc_clustering_cost(
             self.potential_clusters1
         ) > self.calc_clustering_cost(self.potential_clusters2):
             self.implement(self.potential_clusters2, True)
-            # print()
-            # print("Implemented!")
-            # for key, value in self.clusters.items():
-            #     for c in value:
-            #         print(f"{c.indices}, {c.avg_distance}")
-            # print()
             return True
         else:
             self.implement(self.potential_clusters1, False)
-            # print()
-            # print("Rejected!")
-            # for key, value in self.clusters.items():
-            #     for c in value:
-            #         print(f"{c.indices}, {c.avg_distance}")
-            # print()
             return False
 
     def find_suboptimal_cluster(self) -> Cluster:
