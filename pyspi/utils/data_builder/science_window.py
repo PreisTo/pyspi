@@ -156,55 +156,57 @@ class SPISWFile:
             self._time_start = 0
             self._time_stop = time_stop - time_start
             self._norm_time = time_start
+            for det in self._det:
+                if det in range(19) or self._det == "singles":
+                    dets_sgl = hdu_oper[1].data["DETE"]
+                    if det != "singles":
+                        time_sgl = time_sgl[dets_sgl == det]
+                        energy_sgl = hdu_oper[1].data["energy"][dets_sgl == det]
+                    else:
+                        energy_sgl = hdu_oper[1].data["energy"]
 
-            if self._det in range(19) or self._det == "singles":
-                dets_sgl = hdu_oper[1].data["DETE"]
-                if self._det != "singles":
-                    time_sgl = time_sgl[dets_sgl == self._det]
-                    energy_sgl = hdu_oper[1].data["energy"][dets_sgl == self._det]
+                    dets_psd = hdu_oper[2].data["DETE"]
+                    if det != "singles":
+                        time_psd = time_psd[dets_psd == det]
+                        energy_psd = hdu_oper[2].data["energy"][dets_psd == det]
+                    else:
+                        energy_psd = hdu_oper[2].data["energy"]
+
+                if det in range(19, 61):
+                    dets_me2 = np.sort(hdu_oper[4].data["DETE"], axis=1)
+                    i, k = double_names[det]
+                    mask = np.logical_and(dets_me2[:, 0] == i, dets_me2[:, 1] == k)
+                    time_me2 = time_me2[mask]
+                    energy_me2 = np.sum(hdu_oper[4].data["energy"][mask], axis=1)
+
+                if det in range(61, 85):
+                    dets_me3 = np.sort(hdu_oper[5].data["DETE"], axis=1)
+                    i, j, k = triple_names[det]
+                    mask = np.logical_and(
+                        np.logical_and(dets_me3[:, 0] == i, dets_me3[:, 1] == j),
+                        dets_me3[:, 2] == k,
+                    )
+                    time_me3 = time_me3[mask]
+                    energy_me3 = np.sum(hdu_oper[5].data["energy"][mask], axis=1)
+
+                if det in range(19):
+                    self._times = time_psd
+                    self._energies = energy_psd
+                    self._times = np.append(self._times, time_sgl)
+                    self._energies = np.append(self._energies, energy_sgl)
+                    sort_array = np.argsort(self._times)
+                    self._times = self._times[sort_array]
+                    self._energies = self._energies[sort_array]
+
+                elif det in range(19, 61):
+                    self._times = time_me2
+                    self._energies = energy_me2
+
+                elif det in range(61, 85):
+                    self._times = time_me3
+                    self._energies = energy_me3
                 else:
-                    energy_sgl = hdu_oper[1].data["energy"]
-
-                dets_psd = hdu_oper[2].data["DETE"]
-                if self._det != "singles":
-                    time_psd = time_psd[dets_psd == self._det]
-                    energy_psd = hdu_oper[2].data["energy"][dets_psd == self._det]
-                else:
-                    energy_psd = hdu_oper[2].data["energy"]
-
-            if self._det in range(19, 61):
-                dets_me2 = np.sort(hdu_oper[4].data["DETE"], axis=1)
-                i, k = double_names[self._det]
-                mask = np.logical_and(dets_me2[:, 0] == i, dets_me2[:, 1] == k)
-                time_me2 = time_me2[mask]
-                energy_me2 = np.sum(hdu_oper[4].data["energy"][mask], axis=1)
-
-            if self._det in range(61, 85):
-                dets_me3 = np.sort(hdu_oper[5].data["DETE"], axis=1)
-                i, j, k = triple_names[self._det]
-                mask = np.logical_and(
-                    np.logical_and(dets_me3[:, 0] == i, dets_me3[:, 1] == j),
-                    dets_me3[:, 2] == k,
-                )
-                time_me3 = time_me3[mask]
-                energy_me3 = np.sum(hdu_oper[5].data["energy"][mask], axis=1)
-
-        if self._det in range(19):
-            self._times = time_psd
-            self._energies = energy_psd
-            self._times = np.append(self._times, time_sgl)
-            self._energies = np.append(self._energies, energy_sgl)
-            sort_array = np.argsort(self._times)
-            self._times = self._times[sort_array]
-            self._energies = self._energies[sort_array]
-
-        if self._det in range(19, 61):
-            self._times = time_me2
-            self._energies = energy_me2
-
-        if self._det in range(61, 85):
-            self._times = time_me3
-            self._energies = energy_me3
+                    raise ValueError(f"Det {self._det} is invalid")
 
         self._check_counts()
         self._bin_energies()
