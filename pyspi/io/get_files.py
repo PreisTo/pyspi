@@ -6,6 +6,9 @@ from urllib.error import URLError
 
 from astropy.utils.data import download_file
 from astroquery.esa.integral import IntegralClass
+from pathlib import Path
+import shutil
+
 
 from pyspi.io.file_utils import file_existing_and_readable
 from pyspi.io.package_data import get_path_of_external_data_dir
@@ -108,12 +111,16 @@ def get_and_save_file(extension, pointing_id, access="isdc"):
 def get_and_save_isla(pointing_id):
 
     isla = IntegralClass()
-    save_path = os.path.join(
-        get_path_of_external_data_dir(), "pointing_data", pointing_id
+    save_path = Path(
+        os.path.join(get_path_of_external_data_dir(), "pointing_data", pointing_id)
     )
     os.makedirs(save_path, exist_ok=True)
 
-    isla.download_science_windows(science_windows=[pointing_id], output_file=save_path)
+    res = isla.download_science_windows(science_windows=[pointing_id])
+    for r in res:
+        shutil.move(r["path"], save_path / r["filename"])
+
+    # TODO: clean up the anonymous stuff ...
 
 
 def get_files(pointing_id, access="isdc"):
@@ -134,7 +141,7 @@ def get_files(pointing_id, access="isdc"):
     ], f"Access variable must be 'isdc', 'afs' or 'isla' but is {access}."
 
     create_file_structure(pointing_id)
-    if not access == "heasarc":
+    if not access == "isla":
         # Get the data files we need
         get_and_save_file(
             extension="sc_orbit_param.fits.gz", pointing_id=pointing_id, access=access
