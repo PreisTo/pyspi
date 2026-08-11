@@ -152,7 +152,7 @@ class TimeSeriesBuilderSPI(TimeSeriesBuilder):
             n_channels=spi_grb_setup1.n_channels,
             start_time=spi_grb_setup1.time_start,
             stop_time=spi_grb_setup1.time_stop,
-            live_time=spi_grb_setup1.livetimes_per_interval,
+            live_time=spi_grb_setup1.livetimes_per_interval.reshape(-1),
             live_time_starts=spi_grb_setup1.deadtime_bin_starts,
             live_time_stops=spi_grb_setup1.deadtime_bin_stops,
             first_channel=0,
