@@ -214,7 +214,7 @@ class ResponseGenerator(object):
         except AssertionError:
             # Get the files from the iSDC data archive
             print("AFS data access did not work. " "I will try the ISDC data archive.")
-            get_files(pointing_id, access="isdc")
+            get_files(pointing_id, access="isla")
 
         # Read in geometry file to get sc_matrix
         geometry_file_path = os.path.join(
