@@ -54,21 +54,17 @@ def load_outliers(path, id):
 class PointingClusters:  # add min time diff
     def __init__(
         self,
-        query_table,
-        min_angle_dif,
-        max_angle_dif,
-        max_time_dif,
-        cluster_size_range,
-        random_angle_dif_range=None,
-        center_ra=83.6333,
-        center_dec=22.0144,
+        select_data,
+        min_angle_dif=1.5,
+        max_angle_dif=10.0,
+        max_time_dif=0.2,
+        cluster_size_range=(2, 2),
     ):
-        self._query_table = query_table
+        self._query_table = select_data.table
         self._min_angle_dif = min_angle_dif
         self._max_angle_dif = max_angle_dif
         self._max_time_dif = max_time_dif
         self._cluster_size_range = cluster_size_range
-        self._random_angle_dif_range = random_angle_dif_range
 
         pointings = []
         self._get_scw_ids(print_results=False)
@@ -95,7 +91,7 @@ class PointingClusters:  # add min time diff
                 for pointing in cluster:
                     for i, scw in enumerate(self._scw_ids):
                         if scw[0] == pointing:
-                            pointings_cluster.append((pointing, self._scw_paths[i]))
+                            pointings_cluster.append(pointing)
                             break
                 pointings.append(tuple(pointings_cluster))
 
