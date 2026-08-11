@@ -52,8 +52,8 @@ class SPISWFile:
         try:
             get_files(self._pointing_id, access="afs")
         except AssertionError:
-            print("AFS data access did not work." " I will try the ISDC data archive.")
-            get_files(self._pointing_id, access="isdc")
+            print("AFS data access did not work." " I will try the ISLA data archive.")
+            get_files(self._pointing_id, access="isla")
 
     def _get_pointing_data_path(self, filename):
         """Helper to build path to a pointing data file."""
