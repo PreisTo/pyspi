@@ -5,9 +5,8 @@ from math import erfc
 
 import h5py
 import numpy as np
-from numba import float64, njit
+from numba import njit
 from scipy.integrate import quad
-from scipy.interpolate import interp1d
 
 from pyspi.io.package_data import get_path_of_internal_data_dir
 from pyspi.utils.livedets import get_live_dets_pointing

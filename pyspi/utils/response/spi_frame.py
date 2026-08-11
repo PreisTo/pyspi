@@ -6,7 +6,6 @@ from astropy.coordinates import (
     BaseCoordinateFrame,
     RepresentationMapping,
     frame_transform_graph,
-    spherical_to_cartesian,
 )
 from numba import njit
 

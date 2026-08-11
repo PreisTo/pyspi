@@ -276,7 +276,7 @@ def powerlaw_binned_spectrum(energy_bins, spectrum):
     regular = np.nonzero(C)[0]
     non_regular = []
     for i in range(len(energy_bins) - 1):
-        if not i in regular:
+        if i not in regular:
             non_regular.append(i)
     non_regular = np.array(non_regular)
     binned_spectrum = np.zeros(len(energy_bins) - 1)

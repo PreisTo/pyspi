@@ -1,5 +1,5 @@
 import numpy as np
-from threeML import PluginPrototype
+from threeML.plugins import PluginPrototype
 from pyspi.utils.function_utils import find_response_version
 from pyspi.utils.response.spi_response import ResponseRMFGenerator
 from pyspi.utils.livedets import get_live_dets
