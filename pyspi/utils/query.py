@@ -16,7 +16,7 @@ class SelectData:
         self._heasarc = Heasarc()
         self._position = position
         self._radius = radius
-        self._min_good_spi = 100
+        self._min_good_spi = 300
 
         self._query_region()
 
