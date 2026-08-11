@@ -1,5 +1,5 @@
 import numpy as np
-from threeML.plugins import PluginPrototype
+from threeML import PluginPrototype
 from pyspi.utils.function_utils import find_response_version
 from pyspi.utils.response.spi_response import ResponseRMFGenerator
 from pyspi.utils.livedets import get_live_dets
@@ -12,7 +12,7 @@ from pyspi.utils.cluster_fit_core import (
 )
 
 
-class SPIClusterPlugin(PluginPrototype):
+class SPIClusterLike(PluginPrototype):
     def __init__(
         self,
         name,
@@ -23,7 +23,7 @@ class SPIClusterPlugin(PluginPrototype):
         source_spectrum_powerlaw_binning=True,
     ):
 
-        super(SPIClusterPlugin, self).__init__(name, {})
+        super(SPIClusterLike, self).__init__(name, {})
         self._pointings = pointings
         self._energy_range = energy_range
         self._emod = emod
@@ -202,3 +202,7 @@ class SPIClusterPlugin(PluginPrototype):
                 second_pos = parameter.path.find(".", first_pos + 1)
                 if parameter.path[first_pos + 1 : second_pos] in keywords:
                     self._updatable_sources[s_i] = 1
+
+
+class SPIClusterPlugin(SPIClusterLike):
+    pass
