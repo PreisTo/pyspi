@@ -7,6 +7,8 @@ import astropy.time as at
 from astropy.table import Table
 from numba import njit
 from pyspi.utils.response.spi_drm import SPIDRM
+from pyspi.utils.data_builder.science_window import SPISWFile
+from pyspi.io.get_files import get_files
 
 
 @njit
@@ -156,6 +158,11 @@ def extract_pointing_info(path, p_id):
         return time_start, time_elapsed, energy_bins, counts
 
     oper_file = f"{path}/spi_oper.fits.gz"
+    if not os.path.exists(oper_file):
+        get_files(p_id, access="isla")
+
+    assert os.path.exists(oper_file), f"{oper_file} does not exist"
+
     if os.path.exists(oper_file):
         gti_path = None
         for fname in ["sc_gti.fits.gz", "sc_gti.fits", "spi_gti.fits.gz"]:
@@ -246,6 +253,10 @@ def extract_pointing_info(path, p_id):
                         counts[d, :] += hist
         return time_start, time_elapsed, energy_bins, counts
     # TODO: redefintion of hardcoded energy bins!
+
+    elif path is None:
+        scw = SPISWFile()
+
     energy_bins = np.geomspace(20, 600, 43)
     return (
         None,
