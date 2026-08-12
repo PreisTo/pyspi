@@ -7,6 +7,8 @@ from astropy.coordinates import SkyCoord
 from datetime import datetime, timedelta
 import numpy as np
 from astropy.time import Time
+from threeML import BayesianAnalysis, DataList, JointLikelihood
+from astromodels import Powerlaw, Model, PointSource
 
 
 def no_rebinning(bins, counts, energy_range):
@@ -28,14 +30,17 @@ def no_rebinning(bins, counts, energy_range):
 
 
 if __name__ == "__main__":
-    sd = SelectData(SkyCoord.from_name("G 21.5-0.9"))
+    target = SkyCoord.from_name("G 21.5-0.9")
+    sd = SelectData(target)
     start = datetime(2008, 1, 1)
     sd.filter(
         time_range=(
             float(Time(start).mjd),
             float(Time(start + timedelta(days=31 * 2)).mjd),
-        )
+        ),
+        min_good_spi=800,
     )
+    print(sd.table)
     pc = PointingClusters(sd, cluster_size_range=(2, 2))
     print(pc.pointings)
     sl = SPIClusterLike(
@@ -46,3 +51,12 @@ if __name__ == "__main__":
         binning_func=no_rebinning,
         source_spectrum_powerlaw_binning=False,
     )
+
+    pl = Powerlaw()
+    ps = PointSource("test", ra=target.ra.deg, dec=target.dec.deg, spectral_shape=pl)
+    model = Model(ps)
+    dl = DataList(sl)
+
+    ba = JointLikelihood(model, dl)
+    ba.fit()
+    print(ba.results)
