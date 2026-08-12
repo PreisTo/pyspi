@@ -91,7 +91,16 @@ class PointingClusters:  # add min time diff
                 for pointing in cluster:
                     for i, scw in enumerate(self._scw_ids):
                         if scw[0] == pointing:
-                            pointings_cluster.append((pointing, None))
+                            pointings_cluster.append(
+                                (
+                                    pointing,
+                                    os.path.join(
+                                        os.environ.get("PYSPI", None),
+                                        "pointing_data",
+                                        pointing,
+                                    ),
+                                )
+                            )
                             break
                 pointings.append(tuple(pointings_cluster))
 
