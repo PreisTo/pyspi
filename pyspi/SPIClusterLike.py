@@ -34,6 +34,8 @@ class SPIClusterLike(PluginPrototype):
         self._n_success = 0
         self._n_naninf = 0
         self._exc_counts = {}
+        self._source_model = None
+        self._source = None
         self._prepare_fit_data()
 
     def set_model(self, likelihood_model_instance):
@@ -43,17 +45,34 @@ class SPIClusterLike(PluginPrototype):
 
     def get_log_like(self):
         self._n_calls += 1
-        num_sources = len(self._source_model.sources)
+        if self._source is None:
+            num_sources = len(self._source_model.sources)
+        else:
+            num_sources = 1  # TODO: generalize that
+
         spec_binned = np.zeros((num_sources, len(self._emod) - 1))
         try:
-            for i, source in enumerate(self._source_model.sources.values()):
-                spec = source(self._emod)
+            if self._source is None:
+                for i, source in enumerate(self._source_model.sources.values()):
+                    spec = source(self._emod)
+                    if self._source_spectrum_powerlaw_binning:
+                        spec_binned[i, :] = powerlaw_binned_spectrum(self._emod, spec)
+                    else:
+                        spec_binned[i, :] = (
+                            (self._emod[1:] - self._emod[:-1])
+                            * (spec[:-1] + spec[1:])
+                            / 2
+                        )
+            else:
+                i = 0
+                spec = self._source_model.sources[self._source](self._emod)
                 if self._source_spectrum_powerlaw_binning:
                     spec_binned[i, :] = powerlaw_binned_spectrum(self._emod, spec)
                 else:
                     spec_binned[i, :] = (
                         (self._emod[1:] - self._emod[:-1]) * (spec[:-1] + spec[1:]) / 2
                     )
+
             if 1 in self._updatable_sources:
                 self._update_resp_mats()
 
@@ -151,7 +170,10 @@ class SPIClusterLike(PluginPrototype):
             source_resp_mats = []
             dets = self._dets[count]
             ebs = self._ebs[count]
-            for source in self._source_model.sources.values():
+            for k, source in self._source_model.sources.items():
+                if self._source is not None and self._source != k:
+                    continue
+
                 combination_resp_mats, combination_rmfs = [], []
                 for pointing in range(len(combination)):
                     time = self._t_start[count][pointing]
@@ -186,26 +208,42 @@ class SPIClusterLike(PluginPrototype):
             for source_num, source in enumerate(self._source_model.sources.values()):
                 if self._updatable_sources[source_num] == 1:
                     for pointing in range(len(combination)):
-                        self._resp_mats[count][source_num][pointing][
-                            :, :, :
-                        ] = generate_resp_mat(
-                            self._updatable_rmfs[count][pointing],
-                            len(self._dets[count]),
-                            len(self._ebs[count]),
-                            len(self._emod),
-                            source.position.get_ra(),
-                            source.position.get_dec(),
+                        self._resp_mats[count][source_num][pointing][:, :, :] = (
+                            generate_resp_mat(
+                                self._updatable_rmfs[count][pointing],
+                                len(self._dets[count]),
+                                len(self._ebs[count]),
+                                len(self._emod),
+                                source.position.get_ra(),
+                                source.position.get_dec(),
+                            )
                         )
 
     def _find_updatable_sources(self):
         keywords = ["position"]
-        self._updatable_sources = np.zeros(len(self._source_model.sources), np.int8)
-        for s_i, source in enumerate(self._source_model.sources.values()):
+        if self._source is None:
+            self._updatable_sources = np.zeros(len(self._source_model.sources), np.int8)
+            for s_i, source in enumerate(self._source_model.sources.values()):
+                for parameter in source.free_parameters.values():
+                    first_pos = parameter.path.find(".")
+                    second_pos = parameter.path.find(".", first_pos + 1)
+                    if parameter.path[first_pos + 1 : second_pos] in keywords:
+                        self._updatable_sources[s_i] = 1
+        else:
+            self._updatable_sources = np.zeros(1, np.int8)
+            source = self._source_model.sources[self._source]
             for parameter in source.free_parameters.values():
                 first_pos = parameter.path.find(".")
                 second_pos = parameter.path.find(".", first_pos + 1)
                 if parameter.path[first_pos + 1 : second_pos] in keywords:
-                    self._updatable_sources[s_i] = 1
+                    self._updatable_sources[0] = 1
+
+    def assign_to_source(self, source_name):
+        if self._source_model is not None:
+            assert (
+                source_name in self._source_model.sources.keys()
+            ), f"{source_name} is not a known source name"
+        self._source = source_name
 
 
 class SPIClusterPlugin(SPIClusterLike):
