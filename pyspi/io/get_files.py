@@ -115,8 +115,10 @@ def get_and_save_isla(pointing_id):
     res = isla.download_science_windows(science_windows=[pointing_id])
     for r in res:
         shutil.move(r["path"], save_path / r["filename"])
-
-    # TODO: clean up the anonymous stuff ...
+    base_dir = res[0]["path"].split("/")[0]
+    shutil.rmtree(base_dir)
+    zip_dir = base_dir.split("_")[0]
+    Path(zip_dir + ".zip").unlink()
 
 
 def get_files(pointing_id, access="isdc"):
