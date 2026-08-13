@@ -120,7 +120,7 @@ def get_live_dets(time, event_types=["single", "double", "triple"]):
 
     if "double" in event_types:
         live_double_dets = []
-        for key, value in zip(double_names.keys(), double_names.values()):
+        for key, value in double_names.items():
             dead = False
             for v in value:
                 if v in dead_dets:
@@ -131,7 +131,7 @@ def get_live_dets(time, event_types=["single", "double", "triple"]):
         all_dets = np.concatenate([all_dets, live_double_dets])
     if "triple" in event_types:
         live_triple_dets = []
-        for key, value in zip(triple_names.keys(), triple_names.values()):
+        for key, value in triple_names.items():
             dead = False
             for v in value:
                 if v in dead_dets:

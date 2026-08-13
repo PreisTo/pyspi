@@ -124,8 +124,7 @@ def _construct_double_events_table():
 spi_pseudo_double_detectors = _construct_double_events_table()
 
 
-class SPIDetector(object):
-
+class SPIDetector:
     def __init__(self, detector_number, origin, is_pseudo_detector=False):
         """
         A SPI detector is defined by its number, origin and type
@@ -164,7 +163,6 @@ class SPIDetector(object):
 
 
 class DoubleEventDetector(SPIDetector):
-
     def __init__(self, detector_number, origin, detector1, detector2):
         """
 
@@ -174,9 +172,7 @@ class DoubleEventDetector(SPIDetector):
         :param detector2:
         """
 
-        super(DoubleEventDetector, self).__init__(
-            detector_number, origin, is_pseudo_detector=True
-        )
+        super().__init__(detector_number, origin, is_pseudo_detector=True)
 
         self._detector1 = detector1
         self._detector2 = detector2
@@ -189,8 +185,7 @@ class TripleEventDetector(SPIDetector):
     pass
 
 
-class DetectorContents(object):
-
+class DetectorContents:
     def __init__(self, detector_array):
         assert len(detector_array) == NUM_TOTAL_DETS
 
@@ -211,8 +206,7 @@ class DetectorContents(object):
         return cls(effective_area)
 
 
-class SPI(object):
-
+class SPI:
     def __init__(self, bad_detectors=[], time=None):
 
         self._bad_detectors = bad_detectors
@@ -235,7 +229,6 @@ class SPI(object):
         n = 0  # keeps track of the detector number
 
         for origin in self._detector_origins:
-
             # first we build the real detectors
 
             self._detectors.append(
@@ -247,7 +240,6 @@ class SPI(object):
         # now we build the double event detectors
 
         for detector in spi_pseudo_double_detectors.iterrows():
-
             detector = detector[1]
 
             origin = (detector["x"], detector["y"])
@@ -298,7 +290,6 @@ class SPI(object):
             # first the real detectors
 
             if not detector.is_pseudo_detector:
-
                 if detector.bad:
                     color = "red"
                 else:

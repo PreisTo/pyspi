@@ -1,15 +1,16 @@
 import numpy as np
 from threeML import PluginPrototype
-from pyspi.utils.function_utils import find_response_version
-from pyspi.utils.response.spi_response import ResponseRMFGenerator
-from pyspi.utils.livedets import get_live_dets
-from pyspi.utils.rsp_bases import rsp_bases
+
 from pyspi.utils.cluster_fit_core import (
     extract_pointing_info,
     generate_resp_mat,
     logLcore,
     powerlaw_binned_spectrum,
 )
+from pyspi.utils.function_utils import find_response_version
+from pyspi.utils.livedets import get_live_dets
+from pyspi.utils.response.spi_response import ResponseRMFGenerator
+from pyspi.utils.rsp_bases import rsp_bases
 
 
 class SPIClusterLike(PluginPrototype):
@@ -23,7 +24,7 @@ class SPIClusterLike(PluginPrototype):
         source_spectrum_powerlaw_binning=True,
     ):
 
-        super(SPIClusterLike, self).__init__(name, {})
+        super().__init__(name, {})
         self._pointings = pointings
         self._energy_range = energy_range
         self._emod = emod
@@ -76,6 +77,9 @@ class SPIClusterLike(PluginPrototype):
             self._exc_counts[key] = self._exc_counts.get(key, 0) + 1
             return -1e10
 
+    def get_number_of_data_points(self):
+        return np.prod(self._counts.shape)
+
     def report_call_tally(self):
         print("\n" + "=" * 70)
         print(f"DIAGNOSTIC: {self._name} get_log_like call tally")
@@ -119,11 +123,11 @@ class SPIClusterLike(PluginPrototype):
                     c_counts_f = np.append(c_counts_f, counts_f[dets_0], axis=0)
                     assert np.array_equal(dets_0, dets_temp), (
                         f"Active detectors are not the same for "
-                        f"{combination[0][0]} and {combination[p_i][0]}"
+                        f"{combination[0][0]} and {pointing[0]}"
                     )
                     assert np.array_equal(energy_bins_0, energy_bins), (
                         f"Energy bins are not the same for "
-                        f"{combination[0][0]} and {combination[p_i][0]}"
+                        f"{combination[0][0]} and {pointing[0]}"
                     )
             eb, c = self._binning_func(energy_bins_0, c_counts_f, self._energy_range)
             nd = len(dets_0)
@@ -135,11 +139,11 @@ class SPIClusterLike(PluginPrototype):
             dets.append(dets_0)
             t_elapsed.append(tuple(c_time_elapsed))
 
-        self._ebs = tuple(ebs)
-        self._counts = tuple(counts)
-        self._dets = tuple(dets)
-        self._t_elapsed = tuple(t_elapsed)
-        self._t_start = tuple(t_start)
+        self._ebs = np.array(ebs)
+        self._counts = np.array(counts)
+        self._dets = np.array(dets)
+        self._t_elapsed = np.array(t_elapsed)
+        self._t_start = np.array(t_start)
 
     def _initialize_resp_mats(self):
         resp_mats, rmfs = [], []

@@ -7,7 +7,6 @@ from .science_window import SPISWFile, SPISWFileGRB
 
 
 class TimeSeriesBuilderSPI(TimeSeriesBuilder):
-
     def __init__(
         self,
         name,
@@ -33,7 +32,7 @@ class TimeSeriesBuilderSPI(TimeSeriesBuilder):
         :returns: Object
         """
 
-        super(TimeSeriesBuilderSPI, self).__init__(
+        super().__init__(
             name,
             time_series,
             response=response,
@@ -75,14 +74,14 @@ class TimeSeriesBuilderSPI(TimeSeriesBuilder):
         :returns: Initalized TimeSeriesBuilder object
         """
 
-        assert ebounds is not None or response is not None, (
-            "You have to " "either specify ebounds or input a response object."
-        )
+        assert (
+            ebounds is not None or response is not None
+        ), "You have to either specify ebounds or input a response object."
 
         if ebounds is not None and response is not None:
-            assert np.all(response.ebounds == ebounds), (
-                "Ebounds do not " "match the ones in the response object!"
-            )
+            assert np.all(
+                response.ebounds == ebounds
+            ), "Ebounds do not match the ones in the response object!"
         elif response is not None:
             ebounds = response.ebounds
 
@@ -171,7 +170,7 @@ class TimeSeriesBuilderSPI(TimeSeriesBuilder):
         )
 
         tsb.set_active_time_interval(
-            f"{spi_grb_setup1.times[0]}-" f"{spi_grb_setup1.times[-1]}"
+            f"{spi_grb_setup1.times[0]}-{spi_grb_setup1.times[-1]}"
         )
 
         return tsb

@@ -28,7 +28,7 @@ from jupyterthemes import jtplot
 jtplot.style(context="talk", fscale=1, ticks=True, grid=False)
 ```
 
-Sometime you maybe want to access the underlying data of the analysis to do your own analysis or tests with this data. This section shows how to access some basic quantities, like for example the detected counts per energy channel and the response matrix. First we have to initialize the usual objects in PySPI. 
+Sometime you maybe want to access the underlying data of the analysis to do your own analysis or tests with this data. This section shows how to access some basic quantities, like for example the detected counts per energy channel and the response matrix. First we have to initialize the usual objects in PySPI.
 
 ```python
 from astropy.time import Time
@@ -48,15 +48,15 @@ rsp_base = ResponseDataRMF.from_version(version)
 det=0
 ra = 94.6783
 dec = -70.99905
-drm_generator = ResponseRMFGenerator.from_time(grbtime, 
+drm_generator = ResponseRMFGenerator.from_time(grbtime,
                                                 det,
-                                                ebounds, 
+                                                ebounds,
                                                 ein,
                                                 rsp_base)
 sd = SPIDRM(drm_generator, ra, dec)
-tsb = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}", 
-    det, 
-    grbtime, 
+tsb = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+    det,
+    grbtime,
     response=sd,
     sgl_type="both",
     )
@@ -138,6 +138,3 @@ ax.set_ylabel("Count Rate [cnts/s]")
 ax.set_yscale("log")
 ax.legend();
 ```
-
-
-

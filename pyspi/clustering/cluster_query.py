@@ -31,7 +31,6 @@ def calculate_distance_matrix(
 
     for i in range(len(partitions) - 1):
         for j in range(partitions[i], partitions[i + 1]):
-
             for k in range(j + 1, partitions[i + 1]):
                 distances[j, k] = distances[k, j] = calculate_distance(
                     quick_list[j],
@@ -444,14 +443,12 @@ class Region:
     def add_following_pointings(self, cluster: Cluster, position: int):
         """Called by initial_clustering, tries to add succesive Pointings to Cluster"""
         if cluster.num_pointings < self.query._cluster_size_range[1]:
-
             # Performance may be optimized via this value
             for position2, index in enumerate(
                 self.indices[
                     position : position + 20 * self.query._cluster_size_range[1]
                 ]
             ):
-
                 if self.query._pointings[index].cluster is None:
                     # print(f"Checking: {position+position2}, {index}")
                     if cluster.should_add_pointing(self.query._pointings[index]):

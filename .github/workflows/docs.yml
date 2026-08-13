@@ -65,7 +65,7 @@ jobs:
 
           cd ../../../
           pwd
-        
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel

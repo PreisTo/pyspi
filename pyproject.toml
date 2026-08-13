@@ -26,7 +26,6 @@
 	    "astropy",
 	    "extension-helpers",
 	    "scipy",
-	    "configya",
 	    "astromodels",
 	    "threeml",
 	    "interpolation",
@@ -51,6 +50,7 @@
 	"sphinx-autoapi",
 	"rtds_action"
     ]
+    dev = ["pre-commit"]
 
 [project.urls]
     Documentation = "https://pyspi.readthedocs.io"
@@ -83,4 +83,3 @@
 	log_cli_level = "INFO"
 	testpaths = "pyspi/test"
 	norecursedirs = "pyspi/test"
-

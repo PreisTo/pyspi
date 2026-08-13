@@ -1,14 +1,16 @@
 import math
 import os
 from datetime import datetime
-import numpy as np
-import astropy.io.fits as fits
+
 import astropy.time as at
+import numpy as np
+from astropy.io import fits
 from astropy.table import Table
 from numba import njit
-from pyspi.utils.response.spi_drm import SPIDRM
-from pyspi.utils.data_builder.science_window import SPISWFile
+
 from pyspi.io.get_files import get_files
+from pyspi.utils.data_builder.science_window import SPISWFile
+from pyspi.utils.response.spi_drm import SPIDRM
 
 
 @njit
@@ -135,7 +137,7 @@ def extract_pointing_info(path, p_id):
             if len(index) < 1:
                 raise Exception(f"{p_id} not found")
             pointing_info = t[index[-1][0]]
-            t1 = at.Time(f'{pointing_info["TSTART"]+2451544.5}', format="jd").datetime
+            t1 = at.Time(f"{pointing_info['TSTART'] + 2451544.5}", format="jd").datetime
             time_start = datetime.strftime(t1, "%y%m%d %H%M%S")
 
         with fits.open(f"{path}/dead_time.fits") as file:

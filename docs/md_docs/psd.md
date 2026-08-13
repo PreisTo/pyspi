@@ -32,7 +32,7 @@ Since shortly after the launch of INTEGRAL it is known that there are spurious e
 
 To account for this problem in our analysis we can construct plugins for the "PSD events" and the for the "Non-PSD events" and use only the events with the correct flags, when we construct the time series.
 
-Let's check the difference between the PSD and the Non-PSD events, to see the effect in real SPI data. 
+Let's check the difference between the PSD and the Non-PSD events, to see the effect in real SPI data.
 
 First we define the time and the energy bins we want to use. Then we construct the time series for the three cases:
 
@@ -49,23 +49,23 @@ ebounds = np.geomspace(20,8000,300)
 det = 0
 
 from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
-tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}", 
-    det,  
-    grbtime, 
+tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+    det,
+    grbtime,
     ebounds=ebounds,
     sgl_type="sgl",
     )
-    
-tsb_psd = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}", 
-    det,  
-    grbtime, 
+
+tsb_psd = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+    det,
+    grbtime,
     ebounds=ebounds,
     sgl_type="psd",
     )
 
-tsb_both = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}", 
-    det, 
-    grbtime, 
+tsb_both = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+    det,
+    grbtime,
     ebounds=ebounds,
     sgl_type="both",
     )
@@ -112,10 +112,9 @@ ax.set_yscale("log")
 ax.legend();
 ```
 
-Several features are visible. 
+Several features are visible.
 
-1. A sharp cutoff at small energies for the PSD events, which is due to the low energy threshold in the PSD electronics. 
+1. A sharp cutoff at small energies for the PSD events, which is due to the low energy threshold in the PSD electronics.
 2. For energies>~2700 keV the PSD events decrease again faster than the other events.
 3. In the Non-PSD events we see a peak at ~ 1600 keV that is not visible in the PSD events. This is the so called electronic noise, which consists of spurious events.
 4. The fraction of PSD events to all single events between ~500 and ~2700 keV is very stable and can be explained by an additional dead time for the PSD electronics.
-

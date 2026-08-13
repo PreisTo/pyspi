@@ -28,7 +28,7 @@ from jupyterthemes import jtplot
 jtplot.style(context="talk", fscale=1, ticks=True, grid=False)
 ```
 
-During the life of INTEGRAL/SPI several detectors stopped working correctly and were therefore disabled. In our analysis we need to take this into account, to not include a detector with 0 counts all the time and because the response for the surrounding detectors change when a detector is deactivated. 
+During the life of INTEGRAL/SPI several detectors stopped working correctly and were therefore disabled. In our analysis we need to take this into account, to not include a detector with 0 counts all the time and because the response for the surrounding detectors change when a detector is deactivated.
 
 With PySPI you can calculate for a given time, which detectors are active and which response version is valid at that time.
 

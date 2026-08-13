@@ -1,13 +1,12 @@
 import os
 import shutil
 import urllib
+from pathlib import Path
 from shutil import copyfile
 from urllib.error import URLError
 
 from astropy.utils.data import download_file
 from astroquery.esa.integral import IntegralClass
-from pathlib import Path
-
 
 from pyspi.io.file_utils import file_existing_and_readable
 from pyspi.io.package_data import get_path_of_external_data_dir
@@ -73,7 +72,6 @@ def get_and_save_file(extension, pointing_id, access="isdc"):
         else:
             # use ISDC ftp server
             try:
-
                 file_path = os.path.join(
                     "ftp://isdcarc.unige.ch",
                     "arc",
@@ -102,8 +100,7 @@ def get_and_save_file(extension, pointing_id, access="isdc"):
 
             except Exception as e:
                 raise AssertionError(
-                    f"Downloading {file_path} from the ISDC"
-                    f"does not work! Error: {e}"
+                    f"Downloading {file_path} from the ISDCdoes not work! Error: {e}"
                 )
 
 

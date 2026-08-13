@@ -1,7 +1,7 @@
 import os
 
-import astropy.io.fits as fits
 import numpy as np
+from astropy.io import fits
 from numba import njit
 
 from pyspi.io.package_data import get_path_of_internal_data_dir
@@ -53,7 +53,6 @@ def construct_sc_matrix(scx_ra, scx_dec, scy_ra, scy_dec, scz_ra, scz_dec):
 
 
 class SPIPointing:
-
     def __init__(self, sc_pointing_file):
         """
         This class handles the **current** SPI pointings
@@ -69,7 +68,6 @@ class SPIPointing:
 
         # open the space craft pointing file and extract it
         with fits.open(sc_pointing_file) as f:
-
             self._pointing_data = f["INTL-ORBI-SCP"].data
 
         # construct the space craft pointings
@@ -92,7 +90,6 @@ class SPIPointing:
 
         # open the file
         with fits.open(matrix_file) as f:
-
             # SPI should always be at idx == 2, but lets make sure!
             spi_idx = f["GNRL-IROT-MOD"].data["INSTRUMENT"] == "SPI"
 
@@ -117,7 +114,6 @@ class SPIPointing:
 
         # Look through all times and construct the pointing matrix
         for i in range(self._n_pointings):
-
             # first wwe construct the matric for INTEGRAL
             scx_ra = self._pointing_data["RA_SCX"][i]
             scx_dec = self._pointing_data["DEC_SCX"][i]

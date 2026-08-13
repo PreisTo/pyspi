@@ -37,7 +37,7 @@ or for Mamba
 mamba create -n pyspi -c conda-forge python=3.9 numpy scipy ipython numba astropy matplotlib h5py pandas pytables
 ```
 
-and then run 
+and then run
 
 ```bash
 pip install py-spi
@@ -76,7 +76,7 @@ Next you have to set two environment variable. One to define the path to the fol
 export PYSPI=/path/to/external/datafolder
 export PYSPI_PACKAGE_DATA=/path/to/internal/data
 ```
-Here /path/to/external/datafolder is the path to a folder on your local machine, where PySPI should save all the downloaded data needed for the analysis. The data that will be saved into this folder are the SPI data files as well as one housekeeping data file of SPI and one housekeeping data file of INTEGRAL per analyzed GRB. In total this adds up to roughly 30-70 MB per analyzed GRB. 
+Here /path/to/external/datafolder is the path to a folder on your local machine, where PySPI should save all the downloaded data needed for the analysis. The data that will be saved into this folder are the SPI data files as well as one housekeeping data file of SPI and one housekeeping data file of INTEGRAL per analyzed GRB. In total this adds up to roughly 30-70 MB per analyzed GRB.
 It is not recommended to use the same path for both environment variables.
 
 You should also add these two line to your bashrc (or similar) file to automatically set these variables in every new terminal.

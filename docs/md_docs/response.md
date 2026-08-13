@@ -32,7 +32,7 @@ For every analysis of SPI data we need the correct response for the observation,
 
 In PySPI we construct the response from the official IRF and RMF files, which we interpolate for a given source position and user chosen input and output energy bins.
 
-We start by defining a time, for which we want to construct the response, to get the pointing information of the satellite at this time and the version number of the response. 
+We start by defining a time, for which we want to construct the response, to get the pointing information of the satellite at this time and the version number of the response.
 
 ```python
 from astropy.time import Time
@@ -67,7 +67,7 @@ ra = 94.6783
 dec = -70.99905
 drm_generator = ResponseRMFGenerator.from_time(rsp_time,
                                                 det,
-                                                ebounds, 
+                                                ebounds,
                                                 ein,
                                                 rsp_base)
 sd = SPIDRM(drm_generator, ra, dec)
@@ -78,4 +78,3 @@ SPIDRM is a child class of [InstrumentResponse](https://threeml.readthedocs.io/e
 ```python
 fig = sd.plot_matrix()
 ```
-

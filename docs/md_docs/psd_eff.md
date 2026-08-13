@@ -60,9 +60,9 @@ from pyspi.utils.response.spi_drm import SPIDRM
 det=0
 ra = 94.6783
 dec = -70.99905
-drm_generator_sgl = ResponseRMFGenerator.from_time(grbtime, 
+drm_generator_sgl = ResponseRMFGenerator.from_time(grbtime,
                                                     det,
-                                                    ebounds_sgl, 
+                                                    ebounds_sgl,
                                                     ein,
                                                     rsp_base)
 sd_sgl = SPIDRM(drm_generator_sgl, ra, dec)
@@ -72,9 +72,9 @@ With this we can build a time series and we use all the single events in this ca
 
 ```python
 from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
-tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}", 
-                                            det, 
-                                            grbtime, 
+tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+                                            det,
+                                            grbtime,
                                             response=sd_sgl,
                                             sgl_type="both",
                                             )
@@ -110,15 +110,15 @@ from threeML import DataList
 spilikes_sgl = []
 spilikes_psd = []
 for d in [0,3,4]:
-    drm_generator_sgl = ResponseRMFGenerator.from_time(grbtime, 
+    drm_generator_sgl = ResponseRMFGenerator.from_time(grbtime,
                                                         d,
-                                                        ebounds_sgl, 
+                                                        ebounds_sgl,
                                                         ein,
                                                         rsp_base)
     sd_sgl = SPIDRM(drm_generator_sgl, ra, dec)
-    tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{d}", 
+    tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{d}",
                                                 d,
-                                                grbtime, 
+                                                grbtime,
                                                 response=sd_sgl,
                                                 sgl_type="both",
                                                 )
@@ -128,26 +128,26 @@ for d in [0,3,4]:
     sl_sgl = tsb_sgl.to_spectrumlike()
     spilikes_sgl.append(SPILikeGRB.from_spectrumlike(sl_sgl,
                                                     free_position=False))
-                                                    
-    drm_generator_psd = ResponseRMFGenerator.from_time(grbtime, 
+
+    drm_generator_psd = ResponseRMFGenerator.from_time(grbtime,
                                                         d,
-                                                        ebounds_psd, 
+                                                        ebounds_psd,
                                                         ein,
                                                         rsp_base)
     sd_psd = SPIDRM(drm_generator_psd, ra, dec)
-    tsb_psd = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDetPSD{d}", 
+    tsb_psd = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDetPSD{d}",
                                                 d,
-                                                grbtime, 
+                                                grbtime,
                                                 response=sd_psd,
                                                 sgl_type="both",
                                                 )
     tsb_psd.set_active_time_interval(active_time)
     tsb_psd.set_background_interval(bkg_time1, bkg_time2)
-    
+
     sl_psd = tsb_psd.to_spectrumlike()
     spilikes_psd.append(SPILikeGRB.from_spectrumlike(sl_psd,
                                                     free_position=False))
-                                                    
+
 datalist = DataList(*spilikes_sgl, *spilikes_psd)
 ```
 
@@ -174,7 +174,7 @@ ps = PointSource('GRB',ra=ra, dec=dec, spectral_shape=band)
 model = Model(ps)
 ```
 
-Everything is ready to fit now! We make a Bayesian fit here with MultiNest. To use MultiNest you need to install [pymultinest](https://github.com/JohannesBuchner/PyMultiNest) according to its [documentation](https://johannesbuchner.github.io/PyMultiNest/install.html). 
+Everything is ready to fit now! We make a Bayesian fit here with MultiNest. To use MultiNest you need to install [pymultinest](https://github.com/JohannesBuchner/PyMultiNest) according to its [documentation](https://johannesbuchner.github.io/PyMultiNest/install.html).
 
 ```python
 from threeML import BayesianAnalysis
@@ -200,4 +200,4 @@ threeML_config.bayesian.corner_style.show_titles = False
 fig = ba_spi.results.corner_plot(components=["cons_SPIDetPSD0", "cons_SPIDetPSD3", "cons_SPIDetPSD4"])
 ```
 
-So we see we have a PSD efficiency of ~60 +/- 10 % in this case. 
+So we see we have a PSD efficiency of ~60 +/- 10 % in this case.

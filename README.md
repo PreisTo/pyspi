@@ -58,7 +58,7 @@ Now we are ready to go.
 
 Please have a look at the [documentation](https://pyspi.readthedocs.io/en/latest/) to check out the features ```PySPI``` provides. There is also a [full example](https://pyspi.readthedocs.io/en/latest/notebooks/grb_analysis/), how to perform a spectral fit for the data for GRB120711A, as well as how to localize the GRB with ```PySPI```.
 
-# Contributing 
+# Contributing
 
 Contributions to ```PySPI``` are always welcome. They can come in the form of:
 
@@ -84,7 +84,7 @@ Fixing bugs that you found or that are mentioned in one of the issues is also a 
 
 ### Documentation
 
-Additions or examples, tutorials, or better explanations are always welcome. To ensure that the documentation builds with the current version of the software, we are using [jupytext](https://jupytext.readthedocs.io/en/latest/) to write the documentation in Markdown. These are automatically converted to and executed as jupyter notebooks when changes are pushed to Github. 
+Additions or examples, tutorials, or better explanations are always welcome. To ensure that the documentation builds with the current version of the software, we are using [jupytext](https://jupytext.readthedocs.io/en/latest/) to write the documentation in Markdown. These are automatically converted to and executed as jupyter notebooks when changes are pushed to Github.
 
 ## Testing
 
@@ -95,6 +95,4 @@ pytest -v
 
 ```
 
-in the top level directory. 
-
-
+in the top level directory.

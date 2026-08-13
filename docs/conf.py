@@ -143,8 +143,8 @@ nbsphinx_execute_arguments = [
     "--InlineBackend.rc={'figure.dpi': 96}",
 ]
 
-from pygments.formatters import HtmlFormatter  # noqa: E402
-from pygments.styles import get_all_styles  # noqa: E402
+from pygments.formatters import HtmlFormatter
+from pygments.styles import get_all_styles
 
 path = os.path.join("_static", "pygments")
 if not os.path.isdir(path):

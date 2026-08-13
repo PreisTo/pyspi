@@ -21,7 +21,7 @@ class SPIDRM(InstrumentResponse):
         self._ra = ra
         self._dec = dec
 
-        super(SPIDRM, self).__init__(
+        super().__init__(
             self._drm_generator.matrix,
             self._drm_generator.ebounds,
             self._drm_generator.monte_carlo_energies,

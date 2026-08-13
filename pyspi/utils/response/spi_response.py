@@ -3,11 +3,11 @@ import os
 from datetime import datetime
 
 import numpy as np
-import scipy.interpolate as interpolate
 from astropy.time.core import Time
 from interpolation import interp
 from IPython.display import HTML
 from numba import njit
+from scipy import interpolate
 
 from pyspi.io.get_files import get_files
 from pyspi.io.package_data import (
@@ -188,7 +188,7 @@ def multi_response_irf_read_objects(times, detector, drm="Photopeak"):
     return response_irf_read_times
 
 
-class ResponseGenerator(object):
+class ResponseGenerator:
     def __init__(
         self,
         pointing_id=None,
@@ -213,7 +213,7 @@ class ResponseGenerator(object):
             get_files(pointing_id, access="afs")
         except AssertionError:
             # Get the files from the iSDC data archive
-            print("AFS data access did not work. " "I will try the ISDC data archive.")
+            print("AFS data access did not work. I will try the ISDC data archive.")
             get_files(pointing_id, access="isla")
 
         # Read in geometry file to get sc_matrix
@@ -348,9 +348,7 @@ class ResponseGenerator(object):
 
         # Get the weights
         if ix_left < 0.0:
-
             if ix_right < 0.0:
-
                 out = _prep_out_pixels(ix_left, ix_right, iy_low, iy_up)
 
                 return wgt, out[0], out[1]
@@ -360,9 +358,7 @@ class ResponseGenerator(object):
             wgt_right = 0.5
 
         elif ix_right >= self.irf_ob.irf_nx:
-
             if ix_left >= self.irf_ob.irf_nx:
-
                 out = _prep_out_pixels(ix_left, ix_right, iy_low, iy_up)
 
                 return wgt, out[0], out[1]
@@ -372,12 +368,10 @@ class ResponseGenerator(object):
             wgt_right = 0.5
 
         else:
-
             wgt_left = 1.0 - wgt_right
 
         if iy_low < 0:
             if iy_up < 0:
-
                 out = _prep_out_pixels(ix_left, ix_right, iy_low, iy_up)
 
                 return wgt, out[0], out[1]
@@ -387,9 +381,7 @@ class ResponseGenerator(object):
             wgt_low = 0.5
 
         elif iy_up >= self.irf_ob.irf_ny:
-
             if iy_low >= self.irf_ob.irf_ny:
-
                 out = _prep_out_pixels(ix_left, ix_right, iy_low, iy_up)
 
                 return wgt, out[0], out[1]
@@ -399,7 +391,6 @@ class ResponseGenerator(object):
             wgt_low = 0.5
 
         else:
-
             wgt_low = 1.0 - wgt_up
 
         wgt[0] = wgt_left * wgt_low
@@ -460,7 +451,6 @@ class ResponseGenerator(object):
 
 
 class ResponseRMFGenerator(ResponseGenerator):
-
     def __init__(
         self,
         pointing_id=None,
@@ -753,7 +743,6 @@ class ResponseRMFGenerator(ResponseGenerator):
 
 
 class ResponsePhotopeakGenerator(ResponseGenerator):
-
     def __init__(
         self, pointing_id=None, ebounds=None, response_irf_read_object=None, det=None
     ):
@@ -770,9 +759,7 @@ class ResponsePhotopeakGenerator(ResponseGenerator):
         assert isinstance(response_irf_read_object, ResponseDataPhotopeak)
 
         # call init of base class
-        super(ResponsePhotopeakGenerator, self).__init__(
-            pointing_id, ebounds, response_irf_read_object, det
-        )
+        super().__init__(pointing_id, ebounds, response_irf_read_object, det)
 
         self._effective_area = None
         self._weighted_irf_ph = None

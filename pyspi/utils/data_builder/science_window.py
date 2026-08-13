@@ -52,7 +52,7 @@ class SPISWFile:
         try:
             get_files(self._pointing_id, access="afs")
         except AssertionError:
-            print("AFS data access did not work." " I will try the ISLA data archive.")
+            print("AFS data access did not work. I will try the ISLA data archive.")
             get_files(self._pointing_id, access="isla")
 
     def _get_pointing_data_path(self, filename):
@@ -138,7 +138,6 @@ class SPISWFile:
         pointing_id
         """
         with fits.open(self._get_pointing_data_path("spi_oper.fits.gz")) as hdu_oper:
-
             time_sgl = ISDC_MJD_to_cxcsec(hdu_oper[1].data["time"])
             time_psd = ISDC_MJD_to_cxcsec(hdu_oper[2].data["time"])
             time_me2 = ISDC_MJD_to_cxcsec(hdu_oper[4].data["time"])
@@ -333,7 +332,6 @@ class SPISWFile:
 
 
 class SPISWFileGRB(SPISWFile):
-
     def __init__(self, det, ebounds, time_of_grb, sgl_type=None):
         """
         Class to read in all the data needed from a SCW file for a given
@@ -407,7 +405,6 @@ class SPISWFileGRB(SPISWFile):
         pointing_id
         """
         with fits.open(self._get_pointing_data_path("spi_oper.fits.gz")) as hdu_oper:
-
             time_sgl = (
                 ISDC_MJD_to_cxcsec(hdu_oper[1].data["time"]) - self._GRB_ref_time_cxcsec
             )

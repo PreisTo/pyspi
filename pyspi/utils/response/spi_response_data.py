@@ -2,9 +2,9 @@ import logging
 import os
 from dataclasses import dataclass
 
-import astropy.io.fits as fits
 import h5py
 import numpy as np
+from astropy.io import fits
 
 from pyspi.io.package_data import get_path_of_internal_data_dir
 

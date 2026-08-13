@@ -59,9 +59,9 @@ from pyspi.utils.response.spi_drm import SPIDRM
 det=0
 ra = 94.6783
 dec = -70.99905
-drm_generator = ResponseRMFGenerator.from_time(grbtime, 
+drm_generator = ResponseRMFGenerator.from_time(grbtime,
                                                 det,
-                                                ebounds, 
+                                                ebounds,
                                                 ein,
                                                 rsp_base)
 sd = SPIDRM(drm_generator, ra, dec)
@@ -70,9 +70,9 @@ sd = SPIDRM(drm_generator, ra, dec)
 With this we can build a time series and we use all the single events in this case (PSD + non PSD; see section about electronic noise). To be able to convert the time series into 3ML plugins later, we need to assign them a response object.
 ```python
 from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
-tsb = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}", 
-    det, 
-    grbtime, 
+tsb = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+    det,
+    grbtime,
     response=sd,
     sgl_type="both",
     )
@@ -108,15 +108,15 @@ from pyspi.SPILike import SPILikeGRB
 from threeML import DataList
 spilikes = []
 for d in active_dets:
-    drm_generator = ResponseRMFGenerator.from_time(grbtime, 
+    drm_generator = ResponseRMFGenerator.from_time(grbtime,
                                                     d,
-                                                    ebounds, 
+                                                    ebounds,
                                                     ein,
                                                     rsp_base)
     sd = SPIDRM(drm_generator, ra, dec)
-    tsb = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{d}", 
+    tsb = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{d}",
                                                 d,
-                                                grbtime, 
+                                                grbtime,
                                                 response=sd,
                                                 sgl_type="both",
                                                 )
@@ -155,11 +155,11 @@ We can inspect the fits with residual plots
 
 ```python
 from threeML import display_spectrum_model_counts
-fig = display_spectrum_model_counts(ba_spi, 
-                                data_per_plot=5, 
+fig = display_spectrum_model_counts(ba_spi,
+                                data_per_plot=5,
                                 source_only=True,
                                 show_background=False,
-                                model_cmap="viridis", 
+                                model_cmap="viridis",
                                 data_cmap="viridis",
                                 background_cmap="viridis")
 ```
@@ -180,13 +180,13 @@ for s in spilikes:
     s.set_free_position(True)
 datalist = DataList(*spilikes)
 ```
-Initialize the Bayesian Analysis and start the sampling with MultiNest. To use MultiNest you need to install [pymultinest](https://github.com/JohannesBuchner/PyMultiNest) according to its [documentation](https://johannesbuchner.github.io/PyMultiNest/install.html). 
+Initialize the Bayesian Analysis and start the sampling with MultiNest. To use MultiNest you need to install [pymultinest](https://github.com/JohannesBuchner/PyMultiNest) according to its [documentation](https://johannesbuchner.github.io/PyMultiNest/install.html).
 ```python
 import os
 os.mkdir("./chains_grb_example")
 ba_spi = BayesianAnalysis(model, datalist)
 ba_spi.set_sampler("multinest")
-ba_spi.sampler.setup(500, 
+ba_spi.sampler.setup(500,
                     chain_name='./chains_grb_example/docsfit1_',
                     resume=False,
                     verbose=False)

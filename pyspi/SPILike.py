@@ -1,5 +1,4 @@
 import collections
-from typing import Dict, Optional, Union
 
 import numpy as np
 from astromodels import Model, Parameter
@@ -42,12 +41,11 @@ class SPILike(DispersionSpectrumLike):
         self._free_position: bool = free_position
 
         if not isinstance(observation.response, SPIDRM):
-
-            log.error("The response associated with the observation" " is not a SPIDRM")
+            log.error("The response associated with the observation is not a SPIDRM")
 
             raise AssertionError()
 
-        super(SPILike, self).__init__(name, observation, background, verbose, **kwargs)
+        super().__init__(name, observation, background, verbose, **kwargs)
 
         self._bkg_base_array = bkg_base_array
         self._bkg_array = np.ones(len(self._bkg_base_array))
@@ -61,13 +59,12 @@ class SPILike(DispersionSpectrumLike):
         :returns:
         """
 
-        super(SPILike, self).set_model(likelihood_model)
+        super().set_model(likelihood_model)
 
         if self._free_position:
             log.info(f"Freeing the position of {self.name} and setting priors")
 
             for key in self._like_model.point_sources.keys():
-
                 self._like_model.point_sources[key].position.ra.free = True
                 self._like_model.point_sources[key].position.dec.free = True
 
@@ -81,9 +78,7 @@ class SPILike(DispersionSpectrumLike):
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
         else:
-
             for key in self._like_model.point_sources.keys():
-
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
 
@@ -98,12 +93,12 @@ class SPILike(DispersionSpectrumLike):
         :returns: model counts
         """
 
-        source = super(SPILike, self)._evaluate_model(precalc_fluxes=precalc_fluxes)
+        source = super()._evaluate_model(precalc_fluxes=precalc_fluxes)
         self._update_bkg_array()
         bkg = self._bkg_array * self._bkg_base_array
         return source + bkg
 
-    def get_model(self, precalc_fluxes: Optional[np.ndarray] = None) -> np.ndarray:
+    def get_model(self, precalc_fluxes: np.ndarray | None = None) -> np.ndarray:
         """
         Get the model
 
@@ -112,14 +107,13 @@ class SPILike(DispersionSpectrumLike):
         :returns: model counts
         """
         if self._free_position:
-
             # assumes that the is only one point source which is how
             # it should be!
             ra, dec = self._like_model.get_point_source_position(0)
 
             self._response.set_location(ra, dec)
 
-        return super(SPILike, self).get_model(precalc_fluxes=precalc_fluxes)
+        return super().get_model(precalc_fluxes=precalc_fluxes)
 
     def _add_bkg_nuisance_parameter(self, bkg_parameters) -> None:
         """
@@ -208,9 +202,7 @@ class SPILikeGRB(DispersionSpectrumLike):
             observation.response, SPIDRM
         ), "The response associated with the observation is not a SPIDRM"
 
-        super(SPILikeGRB, self).__init__(
-            name, observation, background, verbose, **kwargs
-        )
+        super().__init__(name, observation, background, verbose, **kwargs)
 
         self._psd_eff: Parameter = Parameter(
             "psd_eff_%s" % name,
@@ -223,7 +215,7 @@ class SPILikeGRB(DispersionSpectrumLike):
         )
 
         # add psd_eff to nuisance parameter dict
-        new_nuisance_parameters: Dict[str, Parameter] = collections.OrderedDict()
+        new_nuisance_parameters: dict[str, Parameter] = collections.OrderedDict()
 
         for key, value in self.nuisance_parameters.items():
             new_nuisance_parameters[key] = value
@@ -232,7 +224,7 @@ class SPILikeGRB(DispersionSpectrumLike):
         self.update_nuisance_parameters(new_nuisance_parameters)
 
     def use_psd_eff_correction(
-        self, min_value: Union[int, float] = 0.5, max_value: Union[int, float] = 1
+        self, min_value: float = 0.5, max_value: float = 1
     ) -> None:
         """
         Activate the use of the effective area correction, which is a multiplicative
@@ -259,7 +251,7 @@ class SPILikeGRB(DispersionSpectrumLike):
 
         self._psd_eff.set_uninformative_prior(Uniform_prior)
 
-    def fix_psd_eff_correction(self, value: Union[int, float] = 1) -> None:
+    def fix_psd_eff_correction(self, value: float = 1) -> None:
         """
         Fix the multiplicative factor (see use_effective_area_correction) to the
                                                  provided value (default: 1)
@@ -279,7 +271,7 @@ class SPILikeGRB(DispersionSpectrumLike):
         :returns:
         """
 
-        super(SPILikeGRB, self).set_model(likelihood_model)
+        super().set_model(likelihood_model)
 
         if self._free_position:
             print("Freeing the position of %s and setting priors" % self.name)
@@ -297,9 +289,7 @@ class SPILikeGRB(DispersionSpectrumLike):
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
         else:
-
             for key in self._like_model.point_sources.keys():
-
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
 
@@ -314,16 +304,15 @@ class SPILikeGRB(DispersionSpectrumLike):
         :returns: model counts
         """
         if self._free_position:
-
             # assumes that the is only one point source which is how
             # it should be!
             ra, dec = self._like_model.get_point_source_position(0)
 
             self._response.set_location(ra, dec)
 
-        return super(SPILikeGRB, self).get_model(precalc_fluxes=precalc_fluxes)
+        return super().get_model(precalc_fluxes=precalc_fluxes)
 
-    def _evaluate_model(self, precalc_fluxes: Optional[np.array] = None) -> np.ndarray:
+    def _evaluate_model(self, precalc_fluxes: np.array | None = None) -> np.ndarray:
         """
         evaluates the full model over all channels
         :return:

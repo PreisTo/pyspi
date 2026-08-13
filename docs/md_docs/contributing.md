@@ -13,7 +13,7 @@ jupyter:
     name: python3
 ---
 
-# Contributing 
+# Contributing
 
 Contributions to ```PySPI``` are always welcome. They can come in the form of:
 
@@ -39,6 +39,4 @@ Fixing bugs that you found or that are mentioned in one of the issues is also a 
 
 ### Documentation
 
-Additions or examples, tutorials, or better explanations are always welcome. To ensure that the documentation builds with the current version of the software, we are using [jupytext](https://jupytext.readthedocs.io/en/latest/) to write the documentation in Markdown. These are automatically converted to and executed as jupyter notebooks when changes are pushed to Github. 
-
-
+Additions or examples, tutorials, or better explanations are always welcome. To ensure that the documentation builds with the current version of the software, we are using [jupytext](https://jupytext.readthedocs.io/en/latest/) to write the documentation in Markdown. These are automatically converted to and executed as jupyter notebooks when changes are pushed to Github.

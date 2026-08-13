@@ -31,7 +31,6 @@ try:
     skip_test = False
 except Exception as e:
     print("Also failed rsync from isdc - will skip test for good " + str(e))
-    pass
 
 
 @pytest.mark.skipif(skip_test, reason="ISDC data archiev is broken")

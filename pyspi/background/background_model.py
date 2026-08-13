@@ -92,7 +92,6 @@ def conv_line_shape(x, amp, mu, sig, tau, ln=True):
         val = amp * np.exp(-((x - mu) ** 2.0) / (2.0 * sig**2))  # use standard Gaussian
 
     else:
-
         if ln:  # logarithmic approximation
             q = np.sqrt(np.pi / 2.0) * amp * sig / tau
             w = (2.0 * tau * (x - mu) + sig**2) / (2.0 * tau**2)  # logarithmic term
@@ -180,8 +179,7 @@ def differential_background_spectrum_array(
     return values
 
 
-class BackgroundModelPointing(object):
-
+class BackgroundModelPointing:
     def __init__(self, pointing_id):
         """
         Init backgroundmodel caculation for a given pointing
@@ -241,8 +239,7 @@ class BackgroundModelPointing(object):
         self._dets_bkg_model[det].set_livetime(livetime)
 
 
-class BackgroundModelPointingDet(object):
-
+class BackgroundModelPointingDet:
     def __init__(self, pointing_id, det):
         """
         Init the background model (Siegert et al. 2019) that will be used as
@@ -284,7 +281,7 @@ class BackgroundModelPointingDet(object):
             revolutions = fh5["Revs"][()]
             i = np.argwhere(revolutions == int(self._rev))[0, 0]
 
-            assert i is not None, "Revolution not found in the" "background database..."
+            assert i is not None, "Revolution not found in thebackground database..."
 
         # Average Energy of all Ebins
         self._average_ebins = (self._energy_bounds[1:] + self._energy_bounds[:-1]) / 2
@@ -295,13 +292,12 @@ class BackgroundModelPointingDet(object):
             os.path.join(get_path_of_internal_data_dir(), "background_database_new.h5"),
             "r",
         ) as fh5:
-
             self._cont = np.zeros((len(self._energy_bounds) - 1, 2))
             all_lines = []
 
             max_line_num = 0
             for index in range(len(self._energy_bounds) - 1):
-                ent = fh5["Ebin_{}".format(index)]
+                ent = fh5[f"Ebin_{index}"]
                 self._cont[index] = ent["Cont"][i, self._det]
                 lines = np.array(
                     [
@@ -313,8 +309,7 @@ class BackgroundModelPointingDet(object):
                 ).T
 
                 all_lines.append(lines)
-                if len(ent["Line_E"][i, self._det]) > max_line_num:
-                    max_line_num = len(ent["Line_E"][i, self._det])
+                max_line_num = max(max_line_num, len(ent["Line_E"][i, self._det]))
 
             self._lines_array = np.ones((len(all_lines), max_line_num, 4)) * (-1)
             for i, p in enumerate(all_lines):

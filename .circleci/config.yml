@@ -20,7 +20,7 @@ jobs:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
       - image: circleci/python:3.6.1
-      
+
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
       # documented at https://circleci.com/docs/2.0/circleci-images/
@@ -53,8 +53,8 @@ jobs:
             ls
             python -m pytest -vv --ignore=venv --cov=pychangcooper
             codecov
-      
-          
+
+
 # test:
 #   post:
 #     - bash <(curl -s https://codecov.io/bash)
