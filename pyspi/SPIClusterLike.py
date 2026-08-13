@@ -186,15 +186,15 @@ class SPIClusterLike(PluginPrototype):
             for source_num, source in enumerate(self._source_model.sources.values()):
                 if self._updatable_sources[source_num] == 1:
                     for pointing in range(len(combination)):
-                        self._resp_mats[count][source_num][pointing][:, :, :] = (
-                            generate_resp_mat(
-                                self._updatable_rmfs[count][pointing],
-                                len(self._dets[count]),
-                                len(self._ebs[count]),
-                                len(self._emod),
-                                source.position.get_ra(),
-                                source.position.get_dec(),
-                            )
+                        self._resp_mats[count][source_num][pointing][
+                            :, :, :
+                        ] = generate_resp_mat(
+                            self._updatable_rmfs[count][pointing],
+                            len(self._dets[count]),
+                            len(self._ebs[count]),
+                            len(self._emod),
+                            source.position.get_ra(),
+                            source.position.get_dec(),
                         )
 
     def _find_updatable_sources(self):
