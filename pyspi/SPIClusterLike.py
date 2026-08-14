@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from threeML import PluginPrototype
 
 from pyspi.utils.cluster_fit_core import (
@@ -11,6 +12,8 @@ from pyspi.utils.function_utils import find_response_version
 from pyspi.utils.livedets import get_live_dets
 from pyspi.utils.response.spi_response import ResponseRMFGenerator
 from pyspi.utils.rsp_bases import rsp_bases
+
+log = logging.getLogger(__name__)
 
 
 class SPIClusterLike(PluginPrototype):
@@ -100,23 +103,23 @@ class SPIClusterLike(PluginPrototype):
         return np.prod(self._counts.shape)
 
     def report_call_tally(self):
-        print("\n" + "=" * 70)
-        print(f"DIAGNOSTIC: {self._name} get_log_like call tally")
-        print(f"  total calls:        {self._n_calls}")
-        print(f"  succeeded (finite): {self._n_success}")
-        print(f"  NaN/inf (no exc.):  {self._n_naninf}")
-        print(f"  exceptions:         {sum(self._exc_counts.values())}")
+        log.info("\n" + "=" * 70)
+        log.info(f"DIAGNOSTIC: {self._name} get_log_like call tally")
+        log.info(f"  total calls:        {self._n_calls}")
+        log.info(f"  succeeded (finite): {self._n_success}")
+        log.info(f"  NaN/inf (no exc.):  {self._n_naninf}")
+        log.info(f"  exceptions:         {sum(self._exc_counts.values())}")
         if self._exc_counts:
-            print("  exception breakdown:")
+            log.info("  exception breakdown:")
             for msg, count in sorted(self._exc_counts.items(), key=lambda kv: -kv[1]):
-                print(f"    {count:>5}x  {msg}")
+                log.info(f"    {count:>5}x  {msg}")
         if self._n_calls and self._n_success == 0:
-            print(
-                "  !!! WARNING: ZERO successful calls -- this fit's "
+            log.warning(
+                "!!! WARNING: ZERO successful calls -- this fit's "
                 "result is meaningless (pure prior), not a real "
                 "measurement. Do not trust it."
             )
-        print("=" * 70 + "\n")
+        log.info("=" * 70 + "\n")
 
     def inner_fit(self):
         return self.get_log_like()
