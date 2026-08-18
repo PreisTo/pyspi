@@ -11,7 +11,7 @@ from pyspi.utils.cluster_fit_core import (
 from pyspi.utils.function_utils import find_response_version
 from pyspi.utils.livedets import get_live_dets
 from pyspi.utils.response.spi_response import ResponseRMFGenerator
-from pyspi.utils.rsp_bases import rsp_bases
+from pyspi.utils.rsp_bases import get_base_rsp
 
 log = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ class SPIClusterLike(PluginPrototype):
                 for pointing in range(len(combination)):
                     time = self._t_start[count][pointing]
                     version = find_response_version(time)
-                    rsp_base = rsp_bases[version]
+                    rsp_base = get_base_rsp(version)
                     pointing_rmfs = tuple(
                         ResponseRMFGenerator.from_time(
                             time, d, ebs, self._emod, rsp_base
