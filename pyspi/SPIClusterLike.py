@@ -56,7 +56,7 @@ class SPIClusterLike(PluginPrototype):
         spec_binned = np.zeros((num_sources, len(self._emod) - 1))
         try:
             if self._source is None:
-                for i, source in enumerate(self._source_model.sources.values()):
+                for i, source in enumerate(list(self._source_model.sources.values())):
                     spec = source(self._emod)
                     if self._source_spectrum_powerlaw_binning:
                         spec_binned[i, :] = powerlaw_binned_spectrum(self._emod, spec)
@@ -208,7 +208,9 @@ class SPIClusterLike(PluginPrototype):
 
     def _update_resp_mats(self):
         for count, combination in enumerate(self._pointings):
-            for source_num, source in enumerate(self._source_model.sources.values()):
+            for source_num, source in enumerate(
+                list(self._source_model.sources.values())
+            ):
                 if self._updatable_sources[source_num] == 1:
                     for pointing in range(len(combination)):
                         self._resp_mats[count][source_num][pointing][:, :, :] = (
@@ -226,7 +228,7 @@ class SPIClusterLike(PluginPrototype):
         keywords = ["position"]
         if self._source is None:
             self._updatable_sources = np.zeros(len(self._source_model.sources), np.int8)
-            for s_i, source in enumerate(self._source_model.sources.values()):
+            for s_i, source in enumerate(list(self._source_model.sources.values())):
                 for parameter in source.free_parameters.values():
                     first_pos = parameter.path.find(".")
                     second_pos = parameter.path.find(".", first_pos + 1)
@@ -235,7 +237,7 @@ class SPIClusterLike(PluginPrototype):
         else:
             self._updatable_sources = np.zeros(1, np.int8)
             source = self._source_model.sources[self._source]
-            for parameter in source.free_parameters.values():
+            for parameter in list(source.free_parameters.values()):
                 first_pos = parameter.path.find(".")
                 second_pos = parameter.path.find(".", first_pos + 1)
                 if parameter.path[first_pos + 1 : second_pos] in keywords:
