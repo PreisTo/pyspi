@@ -1,6 +1,6 @@
-from threeML.plugins.DipersionSpectrumLike import DipersionSpectrumLike
-
 import logging
+
+from threeML.plugins.DipersionSpectrumLike import DipersionSpectrumLike
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class DipersionSpectrumSetLike(DipersionSpectrumLike):
         self._like_model = likelihoodmodel
 
         if self._source_name is not None:
-            if self._source_name not in self._like_model.sources.keys():
+            if self._source_name not in self._like_model.sources:
                 log.error(
                     "Source %s is not contained in "
                     "the likelihood model" % self._source_name

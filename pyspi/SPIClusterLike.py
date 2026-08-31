@@ -1,5 +1,6 @@
-import numpy as np
 import logging
+
+import numpy as np
 from threeML import PluginPrototype
 
 from pyspi.utils.cluster_fit_core import (
