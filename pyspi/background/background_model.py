@@ -1,3 +1,4 @@
+import itertools
 import os
 
 # from scipy.special import erfc
@@ -226,7 +227,7 @@ class BackgroundModelPointing:
         f = bkg_det.differential_background_spectrum
         bkg_rate = np.zeros(len(ebounds) - 1)
 
-        for i, (el, eh) in enumerate(zip(ebounds[:-1], ebounds[1:])):
+        for i, (el, eh) in enumerate(itertools.pairwise(ebounds)):
             bkg_rate[i] += quad(f, el, eh, epsrel=0.01)[0]
 
         return self.tracer * bkg_det.livetime_fraction * bkg_rate

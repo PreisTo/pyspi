@@ -32,4 +32,4 @@ def test_plotting():
 
     time_string = "151212 205010"
     s = SPI(time=time_string)
-    fig = s.plot_spi_working_dets()
+    s.plot_spi_working_dets()

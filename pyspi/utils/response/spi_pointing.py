@@ -137,14 +137,14 @@ class SPIPointing:
 
             self._sc_matrix[i, ...] = spi_matrix
             self._sc_points.append(
-                dict(
-                    scx_ra=scx_ra,
-                    scx_dec=scx_dec,
-                    scy_ra=scy_ra,
-                    scy_dec=scy_dec,
-                    scz_ra=scz_ra,
-                    scz_dec=scz_dec,
-                )
+                {
+                    "scx_ra": scx_ra,
+                    "scx_dec": scx_dec,
+                    "scy_ra": scy_ra,
+                    "scy_dec": scy_dec,
+                    "scz_ra": scz_ra,
+                    "scz_dec": scz_dec,
+                }
             )
 
     @property

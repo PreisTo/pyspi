@@ -139,7 +139,7 @@ def get_files(pointing_id, access="isdc"):
     ], f"Access variable must be 'isdc', 'afs' or 'isla' but is {access}."
 
     create_file_structure(pointing_id)
-    if not access == "isla":
+    if access != "isla":
         # Get the data files we need
         get_and_save_file(
             extension="sc_orbit_param.fits.gz", pointing_id=pointing_id, access=access

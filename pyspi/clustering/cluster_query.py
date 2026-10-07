@@ -87,7 +87,7 @@ def find_regions(distances, max_distance, partitions):
     for i, partition in enumerate(partitions[:-1]):
         unconnected = [j for j in range(partition, partitions[i + 1])]
 
-        while not len(unconnected) == 0:
+        while len(unconnected) != 0:
             temp_region = [unconnected.pop(0)]
             search_index = 0
 
@@ -196,7 +196,7 @@ class ClusteredQuery:
         time_weight: float,
         max_distance: float,
         min_ang_distance: float = 0.0,
-        max_ang_distance: float = None,
+        max_ang_distance: float | None = None,
         cluster_size_range: tuple[int] = (5, 5),
         cluster_size_preference_threshold: tuple[float] = (),
         failed_improvements_max: int = 5,
@@ -287,7 +287,7 @@ class ClusteredQuery:
             self._region_sizes = {}
             self._initial_cluster_sizes = self.initialize_size_dictionary()
             self._cluster_sizes = self.initialize_size_dictionary()
-            for i in self._initial_cluster_sizes.keys():
+            for i in self._initial_cluster_sizes:
                 self._initial_cluster_sizes[i] = 0
                 self._cluster_sizes[i] = 0
             self._attempted_improvements = 0

@@ -51,7 +51,7 @@ def load_outliers(path, id):
     return outliers
 
 
-class PointingClusters:  # add min time diff
+class PointingClusters:  # TODO: add min time diff
     def __init__(
         self,
         select_data,

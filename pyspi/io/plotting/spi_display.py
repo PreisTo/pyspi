@@ -107,13 +107,13 @@ def _construct_double_events_table():
 
     # build a dictionary for out put
 
-    out = dict(
-        detector_number=range(19, 19 + 42),
-        x=origins[:, 0],
-        y=origins[:, 1],
-        detector1=np.array(double_event_pairs)[:, 0],
-        detector2=np.array(double_event_pairs)[:, 1],
-    )
+    out = {
+        "detector_number": range(19, 19 + 42),
+        "x": origins[:, 0],
+        "y": origins[:, 1],
+        "detector1": np.array(double_event_pairs)[:, 0],
+        "detector2": np.array(double_event_pairs)[:, 1],
+    }
 
     # return the as a pandas data frame
 
@@ -207,8 +207,10 @@ class DetectorContents:
 
 
 class SPI:
-    def __init__(self, bad_detectors=[], time=None):
+    def __init__(self, bad_detectors=None, time=None):
 
+        if bad_detectors is None:
+            bad_detectors = []
         self._bad_detectors = bad_detectors
         if time:
             good_detectors = get_live_dets(time)
@@ -281,8 +283,6 @@ class SPI:
         # colors, pseudo_colors = self._get_colors_from_contents(cmap,
         #                                                       pseudo_cmap)
         # color iterators
-        n = 0
-        pseudo_n = 0
 
         # now we loop over all the detectors and if they have contents
         # we will plot them

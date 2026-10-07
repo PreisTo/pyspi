@@ -30,11 +30,7 @@ def path_exists_and_is_directory(path):
     """
     sanitized_path = sanitize_filename(path, abspath=True)
 
-    if os.path.exists(sanitized_path):
-        if os.path.isdir(path):
-            return True
-
-    return False
+    return bool(os.path.exists(sanitized_path) and os.path.isdir(path))
 
 
 def sanitize_filename(filename, abspath=False):

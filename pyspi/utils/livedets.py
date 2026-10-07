@@ -81,7 +81,7 @@ triple_names = {
 }
 
 
-def get_live_dets(time, event_types=["single", "double", "triple"]):
+def get_live_dets(time, event_types=None):
     """
     Get the live dets for a given time
 
@@ -93,6 +93,8 @@ def get_live_dets(time, event_types=["single", "double", "triple"]):
     :returns: array of live dets
     """
 
+    if event_types is None:
+        event_types = ["single", "double", "triple"]
     time = get_time_object(time)
 
     # All single dets
@@ -143,7 +145,7 @@ def get_live_dets(time, event_types=["single", "double", "triple"]):
     return np.array(all_dets, dtype=int)
 
 
-def get_live_dets_pointing(pointing, event_types=["single", "double", "triple"]):
+def get_live_dets_pointing(pointing, event_types=None):
     """
     Get livedets for a given pointing id
 
@@ -154,6 +156,8 @@ def get_live_dets_pointing(pointing, event_types=["single", "double", "triple"])
     :returns:
     """
     # get end time of pointing
+    if event_types is None:
+        event_types = ["single", "double", "triple"]
     id_file_path = os.path.join(get_path_of_internal_data_dir(), "id_data_time.hdf5")
     with h5py.File(id_file_path, "r") as f:
         idx = np.argwhere(f["ID"][()] == pointing.encode("utf-8"))

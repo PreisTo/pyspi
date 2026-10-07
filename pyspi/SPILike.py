@@ -64,7 +64,7 @@ class SPILike(DispersionSpectrumLike):
         if self._free_position:
             log.info(f"Freeing the position of {self.name} and setting priors")
 
-            for key in self._like_model.point_sources.keys():
+            for key in self._like_model.point_sources:
                 self._like_model.point_sources[key].position.ra.free = True
                 self._like_model.point_sources[key].position.dec.free = True
 
@@ -78,7 +78,7 @@ class SPILike(DispersionSpectrumLike):
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
         else:
-            for key in self._like_model.point_sources.keys():
+            for key in self._like_model.point_sources:
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
 
@@ -136,7 +136,7 @@ class SPILike(DispersionSpectrumLike):
         :returns:
         """
 
-        for key in self._like_model.parameters.keys():
+        for key in self._like_model.parameters:
             if "bkg" in key:
                 idx = int(key.split("_")[-1])
                 self._bkg_array[idx] = self._like_model.parameters[key].value
@@ -205,13 +205,13 @@ class SPILikeGRB(DispersionSpectrumLike):
         super().__init__(name, observation, background, verbose, **kwargs)
 
         self._psd_eff: Parameter = Parameter(
-            "psd_eff_%s" % name,
+            f"psd_eff_{name}",
             1.0,
             min_value=0.5,
             max_value=1.1,
             delta=0.05,
             free=False,
-            desc="PSD efficiency for %s" % name,
+            desc=f"PSD efficiency for {name}",
         )
 
         # add psd_eff to nuisance parameter dict
@@ -274,8 +274,8 @@ class SPILikeGRB(DispersionSpectrumLike):
         super().set_model(likelihood_model)
 
         if self._free_position:
-            print("Freeing the position of %s and setting priors" % self.name)
-            for key in self._like_model.point_sources.keys():
+            print(f"Freeing the position of {self.name} and setting priors")
+            for key in self._like_model.point_sources:
                 self._like_model.point_sources[key].position.ra.free = True
                 self._like_model.point_sources[key].position.dec.free = True
 
@@ -289,7 +289,7 @@ class SPILikeGRB(DispersionSpectrumLike):
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
         else:
-            for key in self._like_model.point_sources.keys():
+            for key in self._like_model.point_sources:
                 ra = self._like_model.point_sources[key].position.ra.value
                 dec = self._like_model.point_sources[key].position.dec.value
 

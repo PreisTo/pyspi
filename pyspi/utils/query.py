@@ -25,7 +25,7 @@ class SelectData:
         min_good_spi: float = 300,
         scw_id_range: (int, int) = (None, None),
         time_range: (float, float) = (None, None),
-        obs_type: str = None,
+        obs_type: str | None = None,
         radius: u.Quantity = None,
     ):
         """
