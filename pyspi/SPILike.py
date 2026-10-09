@@ -198,9 +198,9 @@ class SPILikeGRB(DispersionSpectrumLike):
 
         self._free_position = free_position
 
-        assert isinstance(
-            observation.response, SPIDRM
-        ), "The response associated with the observation is not a SPIDRM"
+        assert isinstance(observation.response, SPIDRM), (
+            "The response associated with the observation is not a SPIDRM"
+        )
 
         super().__init__(name, observation, background, verbose, **kwargs)
 

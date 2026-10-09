@@ -21,7 +21,6 @@ class SPISWFile:
     def __init__(self, det, pointing_id, ebounds):
         """
         Class to read in all the data needed from a SCW file
-        for a given config file
 
         :param det: For which detector?
         :param pointing_id: Pointing ID
@@ -48,7 +47,7 @@ class SPISWFile:
         self._get_deadtime_info()
 
     def _fetch_files(self):
-        """Get the data, either from afs or from ISDC archive."""
+        """Get the data, either from afs or from ISLA archive."""
         try:
             get_files(self._pointing_id, access="afs")
         except AssertionError:

@@ -246,9 +246,9 @@ class SPIClusterLike(PluginPrototype):
 
     def assign_to_source(self, source_name):
         if self._source_model is not None:
-            assert (
-                source_name in self._source_model.sources
-            ), f"{source_name} is not a known source name"
+            assert source_name in self._source_model.sources, (
+                f"{source_name} is not a known source name"
+            )
         self._source = source_name
 
 

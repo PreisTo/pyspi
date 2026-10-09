@@ -90,9 +90,7 @@ def conv_line_shape(x, amp, mu, sig, tau, ln=True):
     """
 
     if tau < 1e-3:  # if tau too small
-        val = amp * np.exp(
-            -((x - mu) ** 2.0) / (2.0 * sig**2)
-        )  # use standard Gaussian
+        val = amp * np.exp(-((x - mu) ** 2.0) / (2.0 * sig**2))  # use standard Gaussian
 
     else:
         if ln:  # logarithmic approximation

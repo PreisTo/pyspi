@@ -33,13 +33,14 @@ During the life of INTEGRAL/SPI several detectors stopped working correctly and 
 With PySPI you can calculate for a given time, which detectors are active and which response version is valid at that time.
 
 ```python
-time_string = "051212 205010" #"YYMMDD HHMMSS"; astropy time object also possible
+time_string = "051212 205010"  # "YYMMDD HHMMSS"; astropy time object also possible
 ```
 
 To get the active single detectors for this time use:
 
 ```python
 from pyspi.utils.livedets import get_live_dets
+
 ld = get_live_dets(time_string, event_types="single")
 print(f"Active detectors: {ld}")
 ```
@@ -47,6 +48,7 @@ print(f"Active detectors: {ld}")
 It is also possible to plot the same information visually. This shows the detector plane, and all the inactive detectors at the given time are colored red.
 ```python
 from pyspi.io.plotting.spi_display import SPI
+
 s = SPI(time=time_string)
 fig = s.plot_spi_working_dets()
 ```
@@ -54,6 +56,7 @@ fig = s.plot_spi_working_dets()
 Also the response version at that time can be calculated.
 ```python
 from pyspi.utils.function_utils import find_response_version
+
 v = find_response_version(time_string)
 print(f"Response version number: {v}")
 ```

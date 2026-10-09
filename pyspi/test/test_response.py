@@ -17,13 +17,13 @@ def test_response():
     rsp_base = ResponseDataRMF.from_version(version)
 
     # Check the rsp_base values
-    assert np.isclose(
-        rsp_base.irfs_nonphoto_1.sum(), 1720731.0176313636
-    ), "The IRF values in the rsp base object are not the ones we expect."
+    assert np.isclose(rsp_base.irfs_nonphoto_1.sum(), 1720731.0176313636), (
+        "The IRF values in the rsp base object are not the ones we expect."
+    )
 
-    assert np.isclose(
-        rsp_base.ebounds_rmf_3_base.sum(), 74573.8
-    ), "The Ebounds in the rsp base object are not the ones we expect."
+    assert np.isclose(rsp_base.ebounds_rmf_3_base.sum(), 74573.8), (
+        "The Ebounds in the rsp base object are not the ones we expect."
+    )
 
     det = 0
     ra_val = 94.6783
@@ -31,6 +31,6 @@ def test_response():
     drm_generator = ResponseRMFGenerator.from_time(grbtime, det, ebounds, ein, rsp_base)
     sd = SPIDRM(drm_generator, ra_val, dec_val)
 
-    assert np.isclose(
-        sd.matrix.sum(), 1832.5346236858327, rtol=1e-4
-    ), "We expect a different response matrix..."
+    assert np.isclose(sd.matrix.sum(), 1832.5346236858327, rtol=1e-4), (
+        "We expect a different response matrix..."
+    )

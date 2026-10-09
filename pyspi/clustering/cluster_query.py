@@ -246,15 +246,17 @@ class ClusteredQuery:
 
         assert len(cluster_size_preference_threshold) == (
             cluster_size_range[1] - cluster_size_range[0]
-        ), "cluster_size_preference_threshold must cointain 1 element for each cluster_size_range"
+        ), (
+            "cluster_size_preference_threshold must cointain 1 element for each cluster_size_range"
+        )
 
-        assert (
-            suboptimal_cluster_size >= 1
-        ), "suboptimal_cluster_size must be at least 1"
+        assert suboptimal_cluster_size >= 1, (
+            "suboptimal_cluster_size must be at least 1"
+        )
 
-        assert (
-            close_suboptimal_cluster_size >= suboptimal_cluster_size
-        ), "close_suboptimal_cluster_size must be at least suboptimal_cluster_size"
+        assert close_suboptimal_cluster_size >= suboptimal_cluster_size, (
+            "close_suboptimal_cluster_size must be at least suboptimal_cluster_size"
+        )
 
         self._angle_weight = float(angle_weight)
         self._time_weight = float(time_weight)
@@ -271,9 +273,9 @@ class ClusteredQuery:
         else:
             self._max_ang_distance = float(max_ang_distance)
 
-        assert (
-            self._max_ang_distance > self._min_ang_distance
-        ), "max_ang_distance must > min_ang_distance"
+        assert self._max_ang_distance > self._min_ang_distance, (
+            "max_ang_distance must > min_ang_distance"
+        )
 
         self._angle_angle_weight = max(
             self._angle_weight, self._max_distance / self._max_ang_distance

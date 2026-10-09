@@ -74,14 +74,14 @@ class TimeSeriesBuilderSPI(TimeSeriesBuilder):
         :returns: Initalized TimeSeriesBuilder object
         """
 
-        assert (
-            ebounds is not None or response is not None
-        ), "You have to either specify ebounds or input a response object."
+        assert ebounds is not None or response is not None, (
+            "You have to either specify ebounds or input a response object."
+        )
 
         if ebounds is not None and response is not None:
-            assert np.all(
-                response.ebounds == ebounds
-            ), "Ebounds do not match the ones in the response object!"
+            assert np.all(response.ebounds == ebounds), (
+                "Ebounds do not match the ones in the response object!"
+            )
         elif response is not None:
             ebounds = response.ebounds
 
@@ -132,14 +132,14 @@ class TimeSeriesBuilderSPI(TimeSeriesBuilder):
         :returns: Initalized TimeSeriesBuilder object
         """
 
-        assert (
-            ebounds is not None or response is not None
-        ), "You have to either specify ebounds or input a response object."
+        assert ebounds is not None or response is not None, (
+            "You have to either specify ebounds or input a response object."
+        )
 
         if ebounds is not None and response is not None:
-            assert np.all(
-                response.ebounds == ebounds
-            ), "Ebounds do not match the ones in the response object!"
+            assert np.all(response.ebounds == ebounds), (
+                "Ebounds do not match the ones in the response object!"
+            )
         elif response is not None:
             ebounds = response.ebounds
 

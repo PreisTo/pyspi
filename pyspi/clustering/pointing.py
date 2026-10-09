@@ -31,14 +31,14 @@ def remove_outlier_clusters(pointings, outliers):
     for cluster in pointings:
         was_in = False
         for cluster2 in outliers:
-            assert (
-                cluster2[1] != cluster[0][0]
-            ), "Outliers do not correspond to Clusters"
+            assert cluster2[1] != cluster[0][0], (
+                "Outliers do not correspond to Clusters"
+            )
             if cluster2[0] == cluster[0][0]:
                 was_in = True
-                assert (
-                    cluster2[1] == cluster[1][0]
-                ), "Outliers do not correspond to Clusters"
+                assert cluster2[1] == cluster[1][0], (
+                    "Outliers do not correspond to Clusters"
+                )
                 # continue
         if not was_in:
             new_pointings.append(cluster)

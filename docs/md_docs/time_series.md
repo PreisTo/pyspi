@@ -33,31 +33,35 @@ Gamma-Ray Bursts are transient sources with a typical duration between milliseco
 First we have to define the rough time of the GRB.
 ```python
 from astropy.time import Time
-grbtime = Time("2012-07-11T02:44:53", format='isot', scale='utc')
+
+grbtime = Time("2012-07-11T02:44:53", format="isot", scale="utc")
 ```
 
 Next we need to define the bounds of the energy bins we want to use.
 
 ```python
 import numpy as np
-ebounds = np.geomspace(20,8000,100)
+
+ebounds = np.geomspace(20, 8000, 100)
 ```
 
 Now we can construct the time series.
 
 ```python
 from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
+
 det = 0
-tsb = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
-                                        det,
-                                        grbtime,
-                                        ebounds=ebounds,
-                                        sgl_type="both",
-                                        )
+tsb = TimeSeriesBuilderSPI.from_spi_grb(
+    f"SPIDet{det}",
+    det,
+    grbtime,
+    ebounds=ebounds,
+    sgl_type="both",
+)
 ```
 
 We can now plot the light curves for visualization, in which we can clearly see a transient source in this case.
 
 ```python
-fig = tsb.view_lightcurve(-50,250)
+fig = tsb.view_lightcurve(-50, 250)
 ```

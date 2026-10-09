@@ -44,46 +44,51 @@ First we define the time and the energy bins we want to use. Then we construct t
 from astropy.time import Time
 import numpy as np
 from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
-grbtime = Time("2012-07-11T02:44:53", format='isot', scale='utc')
-ebounds = np.geomspace(20,8000,300)
+
+grbtime = Time("2012-07-11T02:44:53", format="isot", scale="utc")
+ebounds = np.geomspace(20, 8000, 300)
 det = 0
 
 from pyspi.utils.data_builder.time_series_builder import TimeSeriesBuilderSPI
-tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+
+tsb_sgl = TimeSeriesBuilderSPI.from_spi_grb(
+    f"SPIDet{det}",
     det,
     grbtime,
     ebounds=ebounds,
     sgl_type="sgl",
-    )
+)
 
-tsb_psd = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+tsb_psd = TimeSeriesBuilderSPI.from_spi_grb(
+    f"SPIDet{det}",
     det,
     grbtime,
     ebounds=ebounds,
     sgl_type="psd",
-    )
+)
 
-tsb_both = TimeSeriesBuilderSPI.from_spi_grb(f"SPIDet{det}",
+tsb_both = TimeSeriesBuilderSPI.from_spi_grb(
+    f"SPIDet{det}",
     det,
     grbtime,
     ebounds=ebounds,
     sgl_type="both",
-    )
+)
 ```
 
 We can check the light curves for all three cases.
 
 ```python
 print("Only AFEE:")
-fig = tsb_sgl.view_lightcurve(-100,300)
+fig = tsb_sgl.view_lightcurve(-100, 300)
 ```
 ```python
 print("AFFE and PSD trigger:")
-fig = tsb_psd.view_lightcurve(-100,300)
+fig = tsb_psd.view_lightcurve(-100, 300)
 ```
 ```python
 print("Both Combined:")
-fig = tsb_both.view_lightcurve(-100,300)
+fig = tsb_both.view_lightcurve(-100, 300)
 ```
 
 We can see that the PSD event light curve has way less counts. This is due to the fact, that the PSD trigger only starts detecting photons with energies >~ 400 keV.
@@ -101,15 +106,16 @@ counts_both = tsb_both.time_series.count_per_channel_over_interval(tstart, tstop
 We can now plot the counts as a function of the energy channel energies
 ```python
 import matplotlib.pyplot as plt
-fig, ax = plt.subplots(1,1)
+
+fig, ax = plt.subplots(1, 1)
 ax.step(ebounds[1:], counts_sgl, label="Only AFEE")
 ax.step(ebounds[1:], counts_psd, label="AFEE and PSD")
 ax.step(ebounds[1:], counts_both, label="All")
 ax.set_xlabel("Detected Energy [keV]")
 ax.set_ylabel("Counts")
-ax.set_xlim(20,3500)
+ax.set_xlim(20, 3500)
 ax.set_yscale("log")
-ax.legend();
+ax.legend()
 ```
 
 Several features are visible.
