@@ -1,4 +1,5 @@
 import copy
+import logging
 import os
 from datetime import datetime
 
@@ -21,6 +22,8 @@ from pyspi.utils.response.spi_response_data import (
     ResponseDataPhotopeak,
     ResponseDataRMF,
 )
+
+log = logging.getLogger(__name__)
 
 
 @njit
@@ -207,13 +210,16 @@ class ResponseGenerator:
         :param sc_matrix: Matrix to convert SPI coordinate system <-> ICRS
         :param det: Which detector
         """
+
         # Get the data, either from afs or from ISDC archive
         try:
             # Get the data from the afs server
             get_files(pointing_id, access="afs")
         except AssertionError:
             # Get the files from the iSDC data archive
-            print("AFS data access did not work. I will try the ISDC data archive.")
+            log.warning(
+                "AFS data access did not work. I will try the ISLA data archive."
+            )
             get_files(pointing_id, access="isla")
 
         # Read in geometry file to get sc_matrix
@@ -643,7 +649,7 @@ class ResponseRMFGenerator(ResponseGenerator):
                 :, self._det, xx, yy
             ].dot(wgt)
         except IndexError:
-            print("Position outside of SPI FOV!")
+            log.warning("Position outside of SPI FOV!")
             self._weighted_irf_ph = np.zeros_like(
                 self.irf_ob.irfs_photopeak[:, self._det, 20, 20]
             )
