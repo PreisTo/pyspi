@@ -128,14 +128,15 @@ def logLcore(
     return logL
 
 
-def extract_pointing_info(path, p_id):
+def extract_pointing_info(path, p_id, energy_bins=None):
+    # TODO: make a non all dets version
     num_dets = 19
     if os.path.exists(f"{path}/pointing.fits"):
         with fits.open(f"{path}/pointing.fits") as file:
             t = Table.read(file[1])
             index = np.argwhere(t["PTID_ISOC"] == p_id[:8])
             if len(index) < 1:
-                raise Exception(f"{p_id} not found")
+                raise KeyError(f"{p_id} not found")
             pointing_info = t[index[-1][0]]
             t1 = at.Time(f"{pointing_info['TSTART'] + 2451544.5}", format="jd").datetime
             time_start = datetime.strftime(t1, "%y%m%d %H%M%S")
@@ -190,53 +191,6 @@ def extract_pointing_info(path, p_id):
         time_start = datetime.strftime(t1, "%y%m%d %H%M%S")
         duration_seconds = (tstop - tstart) * 86400.0
         time_elapsed = np.full(num_dets, duration_seconds)
-        # TODO: do not hardcode them
-        energy_bins = np.array(
-            [
-                20.0,
-                21.5,
-                23.5,
-                25.5,
-                27.5,
-                30.0,
-                32.5,
-                35.5,
-                38.5,
-                42.0,
-                45.5,
-                49.5,
-                54.0,
-                58.5,
-                63.5,
-                69.0,
-                75.0,
-                81.5,
-                89.0,
-                96.5,
-                105.0,
-                114.0,
-                124.0,
-                134.5,
-                146.0,
-                159.0,
-                172.5,
-                187.5,
-                204.0,
-                221.5,
-                240.5,
-                261.5,
-                284.0,
-                308.5,
-                335.5,
-                364.5,
-                396.0,
-                430.0,
-                467.5,
-                508.0,
-                514.0,
-                600.0,
-            ]
-        )
         counts = np.zeros((num_dets, len(energy_bins) - 1))
 
         with fits.open(oper_file) as hdul:
@@ -253,13 +207,15 @@ def extract_pointing_info(path, p_id):
                     if np.any(mask):
                         hist, _ = np.histogram(energy[mask], bins=energy_bins)
                         counts[d, :] += hist
+        assert energy_bins is not None, (
+            "When not using spimodfit data you need to provide the energy_bins"
+        )
         return time_start, time_elapsed, energy_bins, counts
-    # TODO: redefintion of hardcoded energy bins!
 
     elif path is None:
-        scw = SPISWFile()
+        raise NotImplementedError()
+        SPISWFile()
 
-    energy_bins = np.geomspace(20, 600, 43)
     return (
         None,
         np.zeros(num_dets),
