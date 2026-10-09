@@ -187,6 +187,14 @@ def extract_pointing_info(path, p_id, energy_bins=None):
             if tstart is None:
                 raise Exception(f"{p_id}: no START/STOP rows in {gti_path}")
 
+        # TODO: remove this later!
+        if energy_bins is None:
+            energy_bins = np.geomspace(20, 600, 43)
+
+        assert (
+            energy_bins is not None
+        ), "When not using spimodfit data you need to provide the energy_bins"
+
         t1 = at.Time(tstart + 2451544.5, format="jd").datetime
         time_start = datetime.strftime(t1, "%y%m%d %H%M%S")
         duration_seconds = (tstop - tstart) * 86400.0
@@ -207,9 +215,7 @@ def extract_pointing_info(path, p_id, energy_bins=None):
                     if np.any(mask):
                         hist, _ = np.histogram(energy[mask], bins=energy_bins)
                         counts[d, :] += hist
-        assert energy_bins is not None, (
-            "When not using spimodfit data you need to provide the energy_bins"
-        )
+
         return time_start, time_elapsed, energy_bins, counts
 
     elif path is None:
