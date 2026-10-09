@@ -13,7 +13,7 @@ from pyspi.utils.data_builder.science_window import SPISWFile
 from pyspi.utils.response.spi_drm import SPIDRM
 
 
-@njit
+@njit(fastmath=True)
 def b_maxL_1_flat(m_row, t, C_row):
     n = m_row.shape[0]
     eps = 1e-12
@@ -45,7 +45,7 @@ def b_maxL_1_flat(m_row, t, C_row):
     return 0.5 * (lo + hi)
 
 
-@njit
+@njit(fastmath=True)
 def b_maxL_n(m, t, C, n_p):
     eps = 1e-12
     t_tot = 0.0
@@ -77,7 +77,7 @@ def b_maxL_n(m, t, C, n_p):
     return 0.5 * (lo + hi)
 
 
-@njit
+@njit(fastmath=True)
 def logLcore(
     spec_binned,
     pointings,
