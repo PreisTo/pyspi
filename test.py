@@ -1,16 +1,17 @@
-#! /usr/bin/env python3
-
 from datetime import datetime
 
 import numpy as np
-from astromodels import Log_uniform_prior, Model, PointSource, Powerlaw, Uniform_prior
+from threeML import DataList, BayesianAnalysis
+from astromodels.functions import Powerlaw, Uniform_prior, Log_uniform_prior
+from astromodels.sources import PointSource
+from astromodels.core.model import Model
 from astropy.coordinates import SkyCoord
 from astropy.time import Time
-from threeML import BayesianAnalysis, DataList, plot_spectra
 
 from pyspi.clustering.pointing import PointingClusters
 from pyspi.SPIClusterLike import SPIClusterLike
 from pyspi.utils.query import SelectData
+import matplotlib.pyplot as plt
 
 
 def no_rebinning(bins, counts, energy_range):
@@ -31,41 +32,41 @@ def no_rebinning(bins, counts, energy_range):
     return bins, counts
 
 
-if __name__ == "__main__":
-    target = SkyCoord.from_name("XTE J1817-330")
-    sd = SelectData(target)
-    start = datetime(2006, 2, 15)
-    stop = datetime(2006, 2, 18)
-    sd.filter(
-        time_range=(Time(start).mjd, Time(stop).mjd),
-        min_good_spi=800,
-    )
-    print(sd.table)
-    pc = PointingClusters(sd, cluster_size_range=(3, 3))
-    print(pc.pointings)
-    sl = SPIClusterLike(
-        "test",
-        pc.pointings,
-        energy_range=(20, 1000),
-        emod=np.geomspace(20, 1000, 500),
-        binning_func=no_rebinning,
-        source_spectrum_powerlaw_binning=False,
-    )
+target_position = SkyCoord.from_name("Crab")
 
-    pl = Powerlaw()
-    ps = PointSource("test", ra=target.ra.deg, dec=target.dec.deg, spectral_shape=pl)
-    model = Model(ps)
-    pl.K.prior = Log_uniform_prior(lower_bound=1e-3, upper_bound=1e3)
-    pl.index.prior = Uniform_prior(lower_bound=-5, upper_bound=2)
-    dl = DataList(sl)
+pl = Powerlaw()
+ps = PointSource(
+    "crab", ra=target_position.ra.deg, dec=target_position.dec.deg, spectral_shape=pl
+)
+model = Model(ps)
 
-    ba = BayesianAnalysis(model, dl)
-    ba.set_sampler("nautilus")
-    ba.sampler.setup(pool=10)
-    ba.sample()
-    print(ba.results)
-    fig = plot_spectra(ba.results)
-    fig.savefig("test.png")
+pl.K.prior = Log_uniform_prior(lower_bound=1e-4, upper_bound=1e3)
+pl.index.prior = Uniform_prior(lower_bound=-4, upper_bound=-1)
+sd = SelectData(target_position)
+start = datetime(2003, 1, 1)
+stop = datetime(2003, 12, 31)
+sd.filter(
+    time_range=(Time(start).mjd, Time(stop).mjd),
+    min_good_spi=800,
+)
+sd.table = sd.table[:9]
+print(sd.table)
+pc = PointingClusters(sd, cluster_size_range=(3, 3))
+print(pc.pointings)
+sl = SPIClusterLike(
+    "spi_data",
+    pc.pointings,
+    energy_range=(20, 1000),
+    emod=np.geomspace(20, 1000, 500),
+    binning_func=no_rebinning,
+    source_spectrum_powerlaw_binning=False,
+)
 
-    fig = ba.results.corner_plot()
-    fig.savefig("corner.png")
+dl = DataList(sl)
+ba = BayesianAnalysis(model, dl)
+ba.set_sampler("multinest")
+ba.sampler.setup(resume=False)
+ba.sample()
+ba.results.write_to("test.fits", overwrite=True)
+fig = ba.results.corner_plot()
+fig.savefig("test.png")
