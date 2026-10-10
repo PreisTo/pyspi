@@ -6,6 +6,7 @@ import astropy.units as u
 import numpy as np
 from astropy.coordinates import SkyCoord, SkyOffsetFrame
 from astroquery.heasarc import Heasarc
+import astropy
 
 if TYPE_CHECKING:
     from pyspi.clustering.cluster_query import Cluster
@@ -88,6 +89,13 @@ class SelectData:
     @property
     def table(self):
         return self._table
+
+    @table.setter
+    def table(self, table):
+        if isinstance(table, astropy.table.Table):
+            self._table = table
+        else:
+            raise TypeError("Can only set table with astropy.table")
 
     @property
     def position(self):
