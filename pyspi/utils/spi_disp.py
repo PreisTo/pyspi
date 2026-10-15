@@ -78,6 +78,16 @@ class SPIPointingPlugin(DispersionSpectrumLike):
 
         return super().get_model(precalc_fluxes)
 
+    def rebin_on_source(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This function can not be called on singular SPI plugins - use the set"
+        )
+
+    def rebin_on_background(self, *args, **kwargs):
+        raise NotImplementedError(
+            "This function can not be called on singular SPI plugins - use the set"
+        )
+
     @classmethod
     def from_pointing_number(cls, pointing_number, det, energy_bins, mc_energies):
         # TODO: this only works for singles currently
