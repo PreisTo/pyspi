@@ -1,10 +1,9 @@
 import logging
 import os
-
 import numpy as np
 from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
 
-from pyspi.utils.cluster_fit_core import extract_pointing_info
+from pyspi.utils.cluster_fit_core import extract_pointing_info, logLcore
 from pyspi.utils.livedets import get_live_dets_pointing
 from pyspi.utils.spi_disp import SPIPointingPlugin
 
@@ -25,16 +24,13 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         self._binned_spec_with_disp_dict = binned_spec_with_disp_dict
         self._binned_spec_with_disp_list = []
         for p in self._binned_spec_with_disp_dict:
-            for d, v in self._binned_spec_with_disp_dict[p].items():
+            for v in self._binned_spec_with_disp_dict[p].values():
                 self._binned_spec_with_disp_list.append(v)
 
         rsps = []
         for b in self._binned_spec_with_disp_list:
             rsps.append(b.response)
         self._responses = rsps
-        self._observed_spectrum = self._binned_spec_with_disp_list[0]._observed_spectrum
-        for b in self._binned_spec_with_disp_list[1:]:
-            self._observed_spectrum += b._observed_spectrum
 
     def set_model(self, likelihoodmodel):
         for bs in self._binned_spec_with_disp_list:
@@ -83,6 +79,12 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
     def responses(self):
         return self._responses
 
+    def get_model(self, precalc_fluxes=None):
+        models = np.empty((len(self._binned_spec_with_disp_list),))
+        for i, b in enumerate(self._binned_spec_with_disp_list):
+            models[i] = b.get_model(precalc_fluxes)
+        return models
+
     def get_log_like(self):
         pass
 
@@ -90,6 +92,9 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
     def from_pointing_list(
         cls, name, pointing_list, energy_bins, mc_energies, dets=None
     ):
+
+        # TODO: make sure the energy bins are the same for all the plugins
+
         dets = []
         for p in pointing_list:
             dets.append(get_live_dets_pointing(p, event_types="single"))
