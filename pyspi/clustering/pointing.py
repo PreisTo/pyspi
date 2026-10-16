@@ -31,14 +31,14 @@ def remove_outlier_clusters(pointings, outliers):
     for cluster in pointings:
         was_in = False
         for cluster2 in outliers:
-            assert cluster2[1] != cluster[0][0], (
-                "Outliers do not correspond to Clusters"
-            )
+            assert (
+                cluster2[1] != cluster[0][0]
+            ), "Outliers do not correspond to Clusters"
             if cluster2[0] == cluster[0][0]:
                 was_in = True
-                assert cluster2[1] == cluster[1][0], (
-                    "Outliers do not correspond to Clusters"
-                )
+                assert (
+                    cluster2[1] == cluster[1][0]
+                ), "Outliers do not correspond to Clusters"
                 # continue
         if not was_in:
             new_pointings.append(cluster)
@@ -105,6 +105,13 @@ class PointingClusters:  # TODO: add min time diff
                 pointings.append(tuple(pointings_cluster))
 
         self.pointings = tuple(pointings)
+
+    @property
+    def cluster_list(self):
+        cluster_list = []
+        for c in self.pointings:
+            cluster_list.append([c[i][0] for i in range(len(c))])
+        return cluster_list
 
     def _get_scw_ids(self, print_results=False):
 
