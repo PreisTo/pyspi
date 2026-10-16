@@ -72,15 +72,15 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         self._predefined_energies: np.ndarray = self._monte_carlo_energies
 
     def set_model(self, likelihoodmodel):
+        self._like_model = likelihoodmodel
+        differential_flux, integral = self._get_diff_flux_and_integral(
+            self._like_model, integrate_method=self._model_integrate_method
+        )
+
+        self._integral_flux = integral
+
         for bs in self._binned_spec_with_disp_list:
             bs.set_model(likelihoodmodel)
-
-    def _evaluate_model(self, precalc_fluxes: np.ndarray | None = None):
-        fluxes = []
-        for b in self._binned_spec_with_disp_list:
-            fluxes.append(b._evaluate_model(precalc_fluxes=precalc_fluxes))
-        fluxes = np.array(fluxes)
-        return fluxes
 
     def set_model_integrate_method(self, method: str):
         """Change the integrate method for the model integration :param method:
@@ -119,13 +119,24 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         return self._responses
 
     def get_model(self, precalc_fluxes=None):
-        models = np.empty((len(self._binned_spec_with_disp_list),))
-        for i, b in enumerate(self._binned_spec_with_disp_list):
-            models[i] = b.get_model(precalc_fluxes)
-        return models
+        if precalc_fluxes is None:
+
+            precalc_fluxes = self._integral_flux()
+
+        models = np.empty((self._len_pointings, self._len_dets, self._len_echans))
+        for p in range(self._len_pointings):
+            for d in range(self._len_dets):
+                models[p, d] = self._binned_spec_with_disp_list[(p + 1) * d].get_model(
+                    precalc_fluxes
+                )
+        return models.reshape(self._len_pointings, self._len_dets, self._len_echans)
 
     def get_log_like(self):
-        pass
+        source_rates = self.get_model()
+        return logLcore(source_rates, self._t_elapsed, self._counts)
+
+    def get_number_of_data_points(self):
+        return self._len_pointings * self._len_dets * self._len_echans
 
     @classmethod
     def from_pointing_list(

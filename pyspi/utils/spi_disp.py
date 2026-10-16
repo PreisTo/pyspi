@@ -25,6 +25,9 @@ class SPIPointingPlugin(DispersionSpectrumLike):
         use_cache=False,
         **kwargs,
     ):
+        # TODO: check if we can reuse that from balrog
+        self._free_position = free_position
+        self._use_cache = use_cache
 
         assert isinstance(data.response, SPIDRM), "Response is not a SPI response"
         super().__init__(name, data, background, verbose, **kwargs)
