@@ -1,3 +1,4 @@
+from functools import reduce
 import logging
 import os
 import numpy as np
@@ -95,11 +96,9 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
 
         # TODO: make sure the energy bins are the same for all the plugins
 
-        dets = []
-        for p in pointing_list:
-            dets.append(get_live_dets_pointing(p, event_types="single"))
+        dets = [get_live_dets_pointing(p, event_types="single") for p in pointing_list]
 
-        common_dets = np.intersect1d(*dets)
+        common_dets = reduce(np.intersect1d, dets)
         bs_dict = {}
         for pointing in pointing_list:
             bs_dict[pointing] = {}
