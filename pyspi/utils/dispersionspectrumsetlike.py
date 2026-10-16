@@ -4,7 +4,8 @@ import os
 import numpy as np
 from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
 
-from pyspi.utils.cluster_fit_core import extract_pointing_info, logLcore
+from pyspi.utils.cluster_fit_core import extract_pointing_info
+from pyspi.utils.single_group_utils import logLcore
 from pyspi.utils.livedets import get_live_dets_pointing
 from pyspi.utils.spi_disp import SPIPointingPlugin
 
@@ -22,6 +23,7 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         binned_spec_with_disp_dict,
         **kwargs,
     ):
+        self._name = name
         self._binned_spec_with_disp_dict = binned_spec_with_disp_dict
         self._binned_spec_with_disp_list = []
         for p in self._binned_spec_with_disp_dict:
@@ -32,6 +34,42 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         for b in self._binned_spec_with_disp_list:
             rsps.append(b.response)
         self._responses = rsps
+        self._len_pointings = len(self._binned_spec_with_disp_dict.keys())
+        self._len_echans = len(self._responses[0].ebounds) - 1
+        self._len_dets = len(next(iter(self._binned_spec_with_disp_dict.values())))
+
+        self._t_elapsed = np.zeros((self._len_pointings, self._len_dets))
+        for p in range(self._len_pointings):
+            for d in range(self._len_dets):
+                self._t_elapsed[p, d] = self._binned_spec_with_disp_list[
+                    (p + 1) + d
+                ].observed_spectrum.exposure
+        self._counts = np.zeros((self._len_pointings, self._len_dets, self._len_echans))
+        for p in range(self._len_pointings):
+            for d in range(self._len_dets):
+                self._counts[p, d] = self._binned_spec_with_disp_list[
+                    (p + 1) + d
+                ].observed_spectrum.counts
+
+        self._monte_carlo_energies = self._responses[
+            0
+        ].monte_carlo_energies  # they have to be the same for all responses
+
+        # TODO: !!!
+        self._nuisance_parameters = {}
+        self._model_integrate_method = "simpson"
+        self._source_name = None
+
+        self._has_contiguous_energies: bool = np.all(
+            [
+                b.observed_spectrum.is_contiguous()
+                for b in self._binned_spec_with_disp_list
+            ]
+        )
+        self._tag = None
+        self._stokes = None
+
+        self._predefined_energies: np.ndarray = self._monte_carlo_energies
 
     def set_model(self, likelihoodmodel):
         for bs in self._binned_spec_with_disp_list:
