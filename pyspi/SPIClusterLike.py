@@ -47,6 +47,33 @@ class SPIClusterLike(PluginPrototype):
         self._find_updatable_sources()
         self._initialize_resp_mats()
 
+    def get_spec_binnded(self):
+        if self._source is None:
+            num_sources = len(self._source_model.sources)
+        else:
+            num_sources = 1  # TODO: generalize that
+
+        spec_binned = np.zeros((num_sources, len(self._emod) - 1))
+        if self._source is None:
+            for i, source in enumerate(list(self._source_model.sources.values())):
+                spec = source(self._emod)
+                if self._source_spectrum_powerlaw_binning:
+                    spec_binned[i, :] = powerlaw_binned_spectrum(self._emod, spec)
+                else:
+                    spec_binned[i, :] = (
+                        (self._emod[1:] - self._emod[:-1]) * (spec[:-1] + spec[1:]) / 2
+                    )
+        else:
+            i = 0
+            spec = self._source_model.sources[self._source](self._emod)
+            if self._source_spectrum_powerlaw_binning:
+                spec_binned[i, :] = powerlaw_binned_spectrum(self._emod, spec)
+            else:
+                spec_binned[i, :] = (
+                    (self._emod[1:] - self._emod[:-1]) * (spec[:-1] + spec[1:]) / 2
+                )
+        return spec_binned
+
     def get_log_like(self):
         self._n_calls += 1
         if self._source is None:
