@@ -2,6 +2,7 @@ from functools import reduce
 import logging
 import os
 import numpy as np
+import math
 from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
 
 from pyspi.utils.cluster_fit_core import extract_pointing_info
@@ -70,6 +71,11 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         self._stokes = None
 
         self._predefined_energies: np.ndarray = self._monte_carlo_energies
+        self._lgammas = 0.0
+        for p in range(self._len_pointings):
+            for d in range(self._len_dets):
+                for e in range(self._len_echans):
+                    self._lgammas -= math.lgamma(self._counts[p, d, e] + 1.0)
 
     def set_model(self, likelihoodmodel):
         self._like_model = likelihoodmodel
@@ -133,7 +139,7 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
 
     def get_log_like(self):
         source_rates = self.get_model()
-        return logLcore(source_rates, self._t_elapsed, self._counts)
+        return logLcore(source_rates, self._t_elapsed, self._counts, self._lgammas)
 
     def get_number_of_data_points(self):
         return self._len_pointings * self._len_dets * self._len_echans
