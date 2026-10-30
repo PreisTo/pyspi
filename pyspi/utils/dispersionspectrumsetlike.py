@@ -161,20 +161,43 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
     def display_model(self, *args, **kwargs):
         residual_plot = ResidualPlot(**kwargs)
 
-        x = self._ebounds[:-1] + np.diff(self._ebounds[1:], self._ebounds[:-1]) / 2
+        x = self._ebounds[:-1] + np.diff(self._ebounds) / 2
         y = np.zeros_like(x)
-        for i in range(self._len_pointings):
-            for d in range(self._len_dets):
-                rebinned_quants = self._binned_spec_with_disp_list[
-                    (i + 1) * d
+        y_exp = np.zeros_like(x)
+
+        y_label = "Observed rate\n(counts s$^{-1}$ keV$^{-1}$)"
+        for i, d in enumerate(self._binned_spec_with_disp_dict.keys()):
+            for j, p in enumerate(self._binned_spec_with_disp_dict[d].keys()):
+                rebinned_quantities = self._binned_spec_with_disp_dict[d][
+                    p
                 ]._construct_counts_arrays(min_rate=1e-99)
-                y += 0
+                weighted_data = (
+                    rebinned_quantities["new_observed_rate"]
+                    / rebinned_quantities["new_chan_width"]
+                )
+                y += weighted_data
+                y_exp += (
+                    rebinned_quantities["expected_model_rate"]
+                    / rebinned_quantities["chan_width"]
+                )
 
-                pass
+        residual_plot.add_data(
+            x,
+            y,
+            yerr=np.sqrt(y),
+            xerr=np.diff(self._ebounds) / 2,
+            label=self._name,
+        )
 
-        # residual_plot.add_data(x, y,None )
+        residual_plot.add_model(x, y_exp, label="Model")
 
-        pass
+        return residual_plot.finalize(
+            xlabel="Energy\n(keV)",
+            ylabel=y_label,
+            xscale="log",
+            yscale="log",
+            show_legend=True,
+        )
 
     @classmethod
     def from_pointing_list(
