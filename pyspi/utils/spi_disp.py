@@ -108,6 +108,7 @@ class SPIPointingPlugin(DispersionSpectrumLike):
         rsp_gen = ResponseRMFGenerator.from_time(
             time_start, det, energy_bins, mc_energies, rsp_base
         )
+
         rsp = SPIDRM(rsp_gen, 0, 0)
 
         bsp = BinnedSpectrumWithDispersion(
@@ -131,13 +132,17 @@ class SPIPointingPlugin(DispersionSpectrumLike):
         mc_energies,
         pointing_number,
         det,
+        pointing_pos=None,
     ):
         version = find_response_version(time_start)
         rsp_base = get_base_rsp(version)
         rsp_gen = ResponseRMFGenerator.from_time(
             time_start, det, energy_bins, mc_energies, rsp_base
         )
-        rsp = SPIDRM(rsp_gen, 0, 0)
+        if pointing_pos is None:
+            rsp = SPIDRM(rsp_gen, 0, 0)
+        else:
+            rsp = SPIDRM(rsp_gen, pointing_pos[0], pointing_pos[1])
 
         bsp = BinnedSpectrumWithDispersion(
             counts=counts,
