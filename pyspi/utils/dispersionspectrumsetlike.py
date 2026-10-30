@@ -4,6 +4,7 @@ import os
 import numpy as np
 import math
 from threeML.plugins.DispersionSpectrumLike import DispersionSpectrumLike
+from threeML.io.plotting.data_residual_plot import ResidualPlot
 
 from pyspi.utils.cluster_fit_core import extract_pointing_info
 from pyspi.utils.single_group_utils import logLcore
@@ -27,34 +28,44 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         self._name = name
         self._binned_spec_with_disp_dict = binned_spec_with_disp_dict
         self._binned_spec_with_disp_list = []
-        for p in self._binned_spec_with_disp_dict:
-            for v in self._binned_spec_with_disp_dict[p].values():
+        for d in self._binned_spec_with_disp_dict:  # detectors
+            for v in self._binned_spec_with_disp_dict[d].values():  # pointings
                 self._binned_spec_with_disp_list.append(v)
 
         rsps = []
         for b in self._binned_spec_with_disp_list:
             rsps.append(b.response)
         self._responses = rsps
-        self._len_pointings = len(self._binned_spec_with_disp_dict.keys())
+        self._len_dets = len(self._binned_spec_with_disp_dict.keys())
         self._len_echans = len(self._responses[0].ebounds) - 1
-        self._len_dets = len(next(iter(self._binned_spec_with_disp_dict.values())))
+        self._len_pointings = len(next(iter(self._binned_spec_with_disp_dict.values())))
 
-        self._t_elapsed = np.zeros((self._len_pointings, self._len_dets))
-        for p in range(self._len_pointings):
-            for d in range(self._len_dets):
-                self._t_elapsed[p, d] = self._binned_spec_with_disp_list[
-                    (p + 1) + d
+        self._t_elapsed = np.empty(
+            (
+                self._len_dets,
+                self._len_pointings,
+            )
+        )
+        for i, d in enumerate(self._binned_spec_with_disp_dict.keys()):
+            for j, p in enumerate(self._binned_spec_with_disp_dict[d].keys()):
+                self._t_elapsed[i, j] = self._binned_spec_with_disp_dict[d][
+                    p
                 ].observed_spectrum.exposure
-        self._counts = np.zeros((self._len_pointings, self._len_dets, self._len_echans))
-        for p in range(self._len_pointings):
-            for d in range(self._len_dets):
-                self._counts[p, d] = self._binned_spec_with_disp_list[
-                    (p + 1) + d
+        self._counts = np.empty((self._len_dets, self._len_echans, self._len_pointings))
+        temp_counts = np.empty((self._len_dets, self._len_pointings, self._len_echans))
+        for i, d in enumerate(self._binned_spec_with_disp_dict.keys()):
+            for j, p in enumerate(self._binned_spec_with_disp_dict[d].keys()):
+                temp_counts[i, j] = self._binned_spec_with_disp_dict[d][
+                    p
                 ].observed_spectrum.counts
+
+        self._counts = temp_counts.swapaxes(1, 2)
 
         self._monte_carlo_energies = self._responses[
             0
         ].monte_carlo_energies  # they have to be the same for all responses
+        self._ebounds = self._responses[0].ebounds
+        # they have to be the same for all responses
 
         # TODO: !!!
         self._nuisance_parameters = {}
@@ -71,15 +82,17 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         self._stokes = None
 
         self._predefined_energies: np.ndarray = self._monte_carlo_energies
+
         self._lgammas = 0.0
-        for p in range(self._len_pointings):
-            for d in range(self._len_dets):
-                for e in range(self._len_echans):
-                    self._lgammas -= math.lgamma(self._counts[p, d, e] + 1.0)
+
+        flat = self._counts.ravel()
+
+        for i in range(flat.size):
+            self._lgammas -= math.lgamma(flat[i] + 1.0)
 
     def set_model(self, likelihoodmodel):
         self._like_model = likelihoodmodel
-        differential_flux, integral = self._get_diff_flux_and_integral(
+        _, integral = self._get_diff_flux_and_integral(
             self._like_model, integrate_method=self._model_integrate_method
         )
 
@@ -103,7 +116,7 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
 
         # if like_model already set, upadte the integral function
         if self._like_model is not None:
-            integral = self._get_diff_flux_and_integral(
+            _, integral = self._get_diff_flux_and_integral(
                 self._like_model, integrate_method=method
             )
 
@@ -117,9 +130,6 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
             figs.append(r.plot_matrix())
         return figs
 
-    def display_model(self):
-        pass
-
     @property
     def responses(self):
         return self._responses
@@ -129,24 +139,46 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
 
             precalc_fluxes = self._integral_flux()
 
-        models = np.empty((self._len_pointings, self._len_dets, self._len_echans))
-        for p in range(self._len_pointings):
-            for d in range(self._len_dets):
-                models[p, d] = self._binned_spec_with_disp_list[(p + 1) * d].get_model(
+        models = np.empty((self._len_dets, self._len_pointings, self._len_echans))
+        for i, d in enumerate(self._binned_spec_with_disp_dict.keys()):
+            for j, p in enumerate(self._binned_spec_with_disp_dict[d].keys()):
+                models[i, j] = self._binned_spec_with_disp_dict[d][p].get_model(
                     precalc_fluxes
                 )
-        return models.reshape(self._len_pointings, self._len_dets, self._len_echans)
+        models = models.swapaxes(1, 2)
+        return models
 
     def get_log_like(self):
         source_rates = self.get_model()
-        return logLcore(source_rates, self._t_elapsed, self._counts, self._lgammas)
+        logl = logLcore(source_rates, self._t_elapsed, self._counts, self._lgammas)
+        if not np.isfinite(logl):
+            return -1e100
+        return logl
 
     def get_number_of_data_points(self):
         return self._len_pointings * self._len_dets * self._len_echans
 
+    def display_model(self, *args, **kwargs):
+        residual_plot = ResidualPlot(**kwargs)
+
+        x = self._ebounds[:-1] + np.diff(self._ebounds[1:], self._ebounds[:-1]) / 2
+        y = np.zeros_like(x)
+        for i in range(self._len_pointings):
+            for d in range(self._len_dets):
+                rebinned_quants = self._binned_spec_with_disp_list[
+                    (i + 1) * d
+                ]._construct_counts_arrays(min_rate=1e-99)
+                y += 0
+
+                pass
+
+        # residual_plot.add_data(x, y,None )
+
+        pass
+
     @classmethod
     def from_pointing_list(
-        cls, name, pointing_list, energy_bins, mc_energies, dets=None
+        cls, name, pointing_list, energy_bins, mc_energies, dets=None, pointing_pos=None
     ):
 
         # TODO: make sure the energy bins are the same for all the plugins
@@ -156,7 +188,6 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         common_dets = reduce(np.intersect1d, dets)
         bs_dict = {}
         for pointing in pointing_list:
-            bs_dict[pointing] = {}
             path = os.path.join(
                 os.environ.get("PYSPI", None),
                 "pointing_data",
@@ -167,13 +198,16 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
                 path, pointing, energy_bins=energy_bins
             )
             for i, d in enumerate(common_dets):
-                bs_dict[pointing][d] = SPIPointingPlugin.from_data(
+                if str(d) not in bs_dict:
+                    bs_dict[str(d)] = {}
+                bs_dict[str(d)][pointing] = SPIPointingPlugin.from_data(
                     time_start,
                     time_elapsed[i],
                     counts_f[i],
                     energy_bins,
                     mc_energies,
-                    pointing,
-                    d,
+                    pointing_number=pointing,
+                    det=d,
+                    pointing_pos=pointing_pos,
                 )
         return cls(name=name, binned_spec_with_disp_dict=bs_dict)
