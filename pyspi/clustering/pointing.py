@@ -115,6 +115,16 @@ class PointingClusters:  # TODO: add min time diff
             cluster_list.append([c[i][0] for i in range(len(c))])
         return cluster_list
 
+    def get_cluster_infos(self) -> None:
+        clusters = {}
+        start, stop = self._cluster_size_range
+        for c in range(start, stop + 1, 1):
+            clusters[c] = 0
+        for c in self.cluster_list:
+            clusters[len(c)] += 1
+
+        print(clusters)
+
     def _get_scw_ids(self, print_results=False):
 
         self._query_table.sort("scw_id")
