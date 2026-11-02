@@ -59,6 +59,7 @@ class PointingClusters:  # TODO: add min time diff
         max_angle_dif=10.0,
         max_time_dif=0.2,
         cluster_size_range=(2, 2),
+        **kwargs,  # getting passed to ClusteredQuery
     ):
         self._query_table = select_data.table
         self._min_angle_dif = min_angle_dif
@@ -83,6 +84,7 @@ class PointingClusters:  # TODO: add min time diff
             close_suboptimal_cluster_size=min(
                 max(1, self._cluster_size_range[0]), self._cluster_size_range[1] - 1
             ),
+            **kwargs,
         ).get_clustered_scw_ids()
 
         for size in range(self._cluster_size_range[0], self._cluster_size_range[1] + 1):
