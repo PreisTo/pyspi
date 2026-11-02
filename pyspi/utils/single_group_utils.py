@@ -74,7 +74,7 @@ def b_maxL(source_counts, t, C, sum_t):
 
 
 @njit(fastmath=True, cache=True)
-def logLcore(source_counts, t_elapsed, counts, lgamma):
+def logLcore(source_counts, t_elapsed, counts, lgamma, b_rate):
 
     n_dets, n_bins, n_p = source_counts.shape
 
@@ -98,6 +98,7 @@ def logLcore(source_counts, t_elapsed, counts, lgamma):
             C = counts[d, e]
 
             b = b_maxL(m, t, C, sum_t)
+            b_rate[d, e] = b
 
             local_logL = 0.0
 

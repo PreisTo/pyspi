@@ -90,6 +90,14 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         for i in range(flat.size):
             self._lgammas -= math.lgamma(flat[i] + 1.0)
 
+        # set something not None here so we can use the full _construct_counts_arrays
+        for b in self._binned_spec_with_disp_list:
+            b._background_noise_model = "poisson"
+
+        self._last_b_rate = np.empty(
+            (self._len_dets, self._len_echans), dtype=np.float64
+        )
+
     def set_model(self, likelihoodmodel):
         self._like_model = likelihoodmodel
         _, integral = self._get_diff_flux_and_integral(
@@ -150,9 +158,16 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
 
     def get_log_like(self):
         source_rates = self.get_model()
-        logl = logLcore(source_rates, self._t_elapsed, self._counts, self._lgammas)
+        logl = logLcore(
+            source_rates,
+            self._t_elapsed,
+            self._counts,
+            self._lgammas,
+            self._last_b_rate,
+        )
         if not np.isfinite(logl):
             return -1e100
+
         return logl
 
     def get_number_of_data_points(self):
@@ -168,13 +183,18 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         y_label = "Observed rate\n(counts s$^{-1}$ keV$^{-1}$)"
         for i, d in enumerate(self._binned_spec_with_disp_dict.keys()):
             for j, p in enumerate(self._binned_spec_with_disp_dict[d].keys()):
-                rebinned_quantities = self._binned_spec_with_disp_dict[d][
-                    p
-                ]._construct_counts_arrays(min_rate=1e-99)
-                weighted_data = (
-                    rebinned_quantities["new_observed_rate"]
-                    / rebinned_quantities["new_chan_width"]
+
+                # get the current plugin
+                cp = self._binned_spec_with_disp_dict[d][p]
+                # set the background counts
+                cp._background_counts = (
+                    self._last_b_rate[i] * cp.observed_spectrum.exposure
                 )
+
+                rebinned_quantities = cp._construct_counts_arrays(min_rate=1e-99)
+                weighted_data = (
+                    rebinned_quantities["new_observed_rate"] - self._last_b_rate[i]
+                ) / rebinned_quantities["new_chan_width"]
                 y += weighted_data
                 y_exp += (
                     rebinned_quantities["expected_model_rate"]
@@ -183,13 +203,14 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
 
         residual_plot.add_data(
             x,
-            y,
-            yerr=np.sqrt(y),
+            y / self._len_pointings,
+            residuals=(y - y_exp) / y_exp,
+            yerr=np.sqrt(y) / self._len_pointings,
             xerr=np.diff(self._ebounds) / 2,
             label=self._name,
         )
 
-        residual_plot.add_model(x, y_exp, label="Model")
+        residual_plot.add_model(x, y_exp / self._len_pointings, label="Model")
 
         return residual_plot.finalize(
             xlabel="Energy\n(keV)",
@@ -234,3 +255,9 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
                     pointing_pos=pointing_pos,
                 )
         return cls(name=name, binned_spec_with_disp_dict=bs_dict)
+
+    def rebin_on_source(self, *args, **kwargs):
+        raise NotImplementedError("This function is not yet implemented")
+
+    def rebin_on_background(self, *args, **kwargs):
+        raise NotImplementedError("This function is not yet implemented")
