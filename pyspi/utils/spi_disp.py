@@ -43,6 +43,10 @@ class SPIPointingPlugin(DispersionSpectrumLike):
 
         # set the standard likelihood model
 
+        assert (
+            len(likelihoodModel.extended_sources) == 0
+        ), "Can not use extended sources with pyspi yet"
+
         super().set_model(likelihoodModel)
 
         if self._free_position:
