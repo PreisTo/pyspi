@@ -16,7 +16,8 @@ log = logging.getLogger(__name__)
 
 class DispersionSpectrumSetLike(DispersionSpectrumLike):
     """
-    Class that holds multiple detectors!
+    3ML plugin that holds multiple SPIPointingPlugins
+
     """
 
     def __init__(
@@ -97,6 +98,7 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
         self._last_b_rate = np.empty(
             (self._len_dets, self._len_echans), dtype=np.float64
         )
+        self._like_model = None
 
     def set_model(self, likelihoodmodel):
         self._like_model = likelihoodmodel
