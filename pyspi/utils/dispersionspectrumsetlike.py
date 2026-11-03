@@ -102,11 +102,14 @@ class DispersionSpectrumSetLike(DispersionSpectrumLike):
 
     def set_model(self, likelihoodmodel):
         self._like_model = likelihoodmodel
-        _, integral = self._get_diff_flux_and_integral(
-            self._like_model, integrate_method=self._model_integrate_method
-        )
+        if hasattr(self, "_get_diff_flux_and_integral"):
+            _, integral = self._get_diff_flux_and_integral(
+                self._like_model, integrate_method=self._model_integrate_method
+            )
 
-        self._integral_flux = integral
+            self._integral_flux = integral
+        else:
+            pass
 
         for bs in self._binned_spec_with_disp_list:
             bs.set_model(likelihoodmodel)
